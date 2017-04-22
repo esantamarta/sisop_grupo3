@@ -1,0 +1,307 @@
+#!/bin/bash
+CURRENT_PATH=$(pwd)
+DIRCONF="dirconf"
+CONF_FILE="$CURRENT_PATH/$DIRCONF/Setup.conf"
+LOG_FILE="$CURRENT_PATH/$DIRCONF/Setup.log"
+
+fin_instalacion() {
+  echolog "Fin del Proceso de Instalación. $USER $(date +"%d-%m-%Y %T")"
+  exit 0
+}
+
+## Listar ruta de archivos
+listar_ruta_arch() {
+  echolog -p " _"
+  for lfile in $(ls $1); do
+    echolog -p "| - $lfile"
+  done
+  echolog -p ""
+} >&2
+
+## Mostrar directorios
+mostrar_directorios() {
+  echolog -p "\nDirectorio de Configuracion: $CURRENT_PATH/$DIRCONF"
+  echolog -p "Directorio de Ejecutables: $CURRENT_PATH/$DIRBIN"
+  echolog -p "Directorio de archivo Maestro de Bancos: $CURRENT_PATH/$DIRMAESTRO"
+  echolog -p "Directorio de Recepcion de Novedades: $CURRENT_PATH/$DIRNOVEDADES"
+  echolog -p "Directorio de Archivos Aceptados: $CURRENT_PATH/$DIRACEPTADOS"
+  echolog -p "Directorio de Archivos Procesados: $CURRENT_PATH/$DIRPROCESADOS"
+  echolog -p "Directorio de Archivos de Reportes: $CURRENT_PATH/$DIRREPORTES"
+  echolog -p "Directorio de Archivos de Log: $CURRENT_PATH/$DIRLOG"
+  echolog -p "Directorio de Archivos de Rechazados: $CURRENT_PATH/$DIRRECHAZADOS"
+}
+
+mover_archivos() {
+  ##Mover archivos de datos al directorio maestro
+  cp "$CURRENT_PATH"/datos/* "$CURRENT_PATH/$DIRMAESTRO"
+  #mv $CURRENT_PATH/datos $CURRENT_PATH/bkp_datos
+
+  ##Mover scripts al directorio BIN
+  mv Logger  "$CURRENT_PATH/$DIRBIN"
+  mv Daemon  "$CURRENT_PATH/$DIRBIN"
+  mv Start  "$CURRENT_PATH/$DIRBIN"
+  mv Stop  "$CURRENT_PATH/$DIRBIN"
+}
+
+## Guardar las variables de configuracion
+guardar_config() {
+  echolog -p "Actualizando la configuracion del sistema\n"
+  USER_META="$USER=$(date +"%d-%m-%Y %T")"
+  echo "CURRENT_PATH=$CURRENT_PATH=$USER_META" >> "$CONF_FILE" 
+  echo "DIRBIN=$DIRBIN=$USER_META" >> "$CONF_FILE" 
+  echo "DIRMAESTRO=$DIRMAESTRO=$USER_META" >> "$CONF_FILE" 
+  echo "DIRNOVEDADES=$DIRNOVEDADES=$USER_META" >> "$CONF_FILE" 
+  echo "DIRACEPTADOS=$DIRACEPTADOS=$USER_META" >> "$CONF_FILE" 
+  echo "DIRPROCESADOS=$DIRPROCESADOS=$USER_META" >> "$CONF_FILE" 
+  echo "DIRREPORTES=$DIRREPORTES=$USER_META" >> "$CONF_FILE" 
+  echo "DIRLOG=$DIRLOG=$USER_META" >> "$CONF_FILE" 
+  echo "DIRRECHAZADOS=$DIRRECHAZADOS=$USER_META" >> "$CONF_FILE" 
+  echolog -p "Instalacion CONCLUIDA.\n"
+}
+
+## Crear directorios de trabajo
+crear_directorios() {
+  actualizar_dir_reservados
+  echolog -p "\nCreando Estructuras de directorio . . . .\n"
+	
+	declare local CONTINUO="S"
+	declare local resto="$RESERVA"
+	declare local dir=""
+	while [ $CONTINUO == "S" ]
+	do
+		dir=$(echo "$resto" | sed 's/\([^|]*\)|.*/\1/')
+		resto=$(echo "$resto" | sed 's/[^|]*|\(.*\)/\1/')
+
+		if [ ! -d "$CURRENT_PATH/$dir" ]; then
+			mkdir "$CURRENT_PATH/$dir"
+		fi
+		if [ -z "$resto" ]
+		then
+			CONTINUO="N"
+		fi
+	done
+
+  #for dir in $RESERVA do
+  #  if [ ! -d "$CURRENT_PATH/$dir" ]; then
+  #    mkdir "$CURRENT_PATH/$dir"  
+  #  fi
+  #done
+}
+
+## Escribir en el archivo log
+echolog() {
+  if [ $# == 1 ]; then 
+    echo -e "$1" >> "$LOG_FILE"
+  else
+    if [ "$1" == "-p" ]; then echo -e "$2" >&2; fi
+    echo -e "$2" >> "$LOG_FILE"
+  fi
+}
+
+## Obtener valores de variables del archivo .conf
+cargar_var_config() {
+  echo $(grep -i $1 "$CONF_FILE" | cut -f 2 -d '=')
+}
+
+## Cargar archivo .conf
+cargar_config() {
+  CURRENT_PATH=$(cargar_var_config CURRENT_PATH)
+  DIRBIN=$(cargar_var_config DIRBIN)
+  DIRMAESTRO=$(cargar_var_config DIRMAESTRO)
+  DIRNOVEDADES=$(cargar_var_config DIRNOVEDADES)
+  DIRACEPTADOS=$(cargar_var_config DIRACEPTADOS)
+  DIRPROCESADOS=$(cargar_var_config DIRPROCESADOS)
+  DIRREPORTES=$(cargar_var_config DIRREPORTES)
+  DIRLOG=$(cargar_var_config DIRLOG)
+  DIRRECHAZADOS=$(cargar_var_config DIRRECHAZADOS)
+}
+
+## Indica si la version de perl es la correcta
+verificar_version_perl() {
+	declare local MIN_VER=$1
+	if [ $# -eq 0 ]
+	then
+		MIN_VER=5 #Por defecto tomo la version minima como la v5
+	fi
+	
+	echolog "Verificando instalacion de Perl"
+	declare local PERL_VER=$(perl -e 'print $];')	
+	if [ $? -ne 0 ] #analizo si el comando tuvo errores, Perl no instalado
+	then
+		echolog -p "Perl no se encuentra instalado. Es necesario instalar al menos las version $MIN_VER"
+		exit 1
+	fi
+	echolog "Perl instalado"
+
+	echolog "Verificando version instalada de Perl. Versión requerida $MIN_VER"
+	if [ $(echo "$PERL_VER>=$1" | bc) -eq 1 ] #chequeo la version
+	then
+		echolog "La version de Perl es correcta"
+	else
+		echolog -p "Se necesita al menos Perl v$MIN_VER. Instalada se tiene: $PERL_VER"
+		exit 1
+	fi 
+}
+
+recupere
+
+# Verificar si el sistema esta instalado
+REINSTALACION="N"
+if [ -f "$CONF_FILE" ]; then
+  clear
+  echo -e "###\tEl sistema ya se encuentra instalado\t###\n"
+  cargar_config
+	
+	if [ "$#" -eq "1" -a "$1" == "-t" ] # se ejecuto con parametro -t
+	then
+		  mostrar_directorios -l
+			exit 0
+	elif [ $# -eq 1 -a "$1" == "-i" ] # Reinstalacion, uso lo cargado en el config
+	then
+			REINSTALACION="S"
+			echolog -p "Reinstalando el sistema"
+			cargar_config # Cargo las varibles de rutas con el valor del config
+		  mostrar_directorios -l		
+	else
+		  exit 0
+	fi
+fi
+
+# Directorios por default
+if [ $REINSTALACION == "N" ]
+then
+	DIRBIN="bin"
+	DIRMAESTRO="maestro"
+	DIRNOVEDADES="novedades"
+	DIRACEPTADOS="aceptados"
+	DIRPROCESADOS="procesados"
+	DIRREPORTES="reportes"
+	DIRLOG="log"
+	DIRRECHAZADOS="rechazados"
+fi
+
+# Verificar si Perl v5 o superior se encuentra instalado
+verificar_version_perl 5
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
+
+# Actualiza la lista de directorios reservados por el sistema
+actualizar_dir_reservados() {
+  RESERVA="$DIRCONF|$DIRBIN|$DIRMAESTRO|$DIRNOVEDADES|$DIRACEPTADOS|$DIRPROCESADOS|$DIRREPORTES|$DIRLOG|$DIRRECHAZADOS|"
+}
+
+#Obtener los directorios del sistema
+obtener_directorios() {
+  actualizar_dir_reservados
+  local VALID="N"  
+  while [ $VALID == "N" ]; do
+    read -p "$1" INGRESO 
+    echolog "$1 $INGRESO"
+    ## Validar lo ingresado por el usuario
+    if [ ! -z "$INGRESO" -a "$INGRESO" != " " ]; then
+      VALID="Y"
+
+			declare local CONTINUO="S"
+			declare local resto="$RESERVA"
+			declare local rname=""
+			while [ $CONTINUO == "S" ]
+			do
+				rname=$(echo "$resto" | sed 's/\([^|]*\)|.*/\1/')
+				resto=$(echo "$resto" | sed 's/[^|]*|\(.*\)/\1/')
+
+				if [ "$INGRESO" == "$rname" ]; then
+					echo -e "\n# El nombre $INGRESO se encuentra reservado\n" >&2
+					VALID="N"
+					break
+				fi
+				if [ -z "$resto" ]
+				then
+					CONTINUO="N"
+				fi
+			done
+
+#      for rname in $RESERVA; do
+#	if [ "$INGRESO" == "$rname" ]; then
+#	  echo -e "\n# El nombre $INGRESO se encuentra reservado\n" >&2
+#	  VALID="N"
+#	  break
+#	fi
+#      done
+      ## Si el nombre no esta reservado por el sistema
+      if [ $VALID == "Y" ]; then
+        echo "$INGRESO"
+      fi
+    else
+      VALID="Y"
+      echo "$2"
+    fi
+  done
+}
+
+if [ $REINSTALACION == "N" ]
+then
+	CONTINUAR="N"
+	while [ $CONTINUAR != "S" ]; do
+		clear
+		echo -e "###\tInstalador del sistema\t###\n"
+		echo -e "- Para aceptar las opciones por default, solamente presione enter.\n"
+		echo -e "- Todos los directorios deben ser ingresados sin '/' al inicio ni al final ( Ej: midir/misubdir ).\n"
+		echo -e "- El directorio ingresado sera relativo a: $CURRENT_PATH\n\n"
+		## Definir directorio del ejecutable
+		DIRBIN=$(obtener_directorios "Defina el directorio de Ejecutables ($CURRENT_PATH/$DIRBIN): " $DIRBIN)
+		## Definir directorio de maestros
+		DIRMAESTRO=$(obtener_directorios "Defina el directorio del archivo Maestro de Bancos ($CURRENT_PATH/$DIRMAESTRO): " $DIRMAESTRO)
+		## Definir directorio de novedades
+		DIRNOVEDADES=$(obtener_directorios "Defina el directorio de Recepcion de Novedades ($CURRENT_PATH/$DIRNOVEDADES): " $DIRNOVEDADES)
+		## Definir directorio de archivos aceptados
+		DIRACEPTADOS=$(obtener_directorios "Defina el directorio de Archivos Aceptados ($CURRENT_PATH/$DIRACEPTADOS): " $DIRACEPTADOS)
+		## Definir directorio de archivos procesados
+		DIRPROCESADOS=$(obtener_directorios "Defina el directorio de Archivos Procesados ($CURRENT_PATH/$DIRPROCESADOS): " $DIRPROCESADOS)
+		## Definir el directorio de Reportes
+		DIRREPORTES=$(obtener_directorios "Defina el directorio de Reportes ($CURRENT_PATH/$DIRREPORTES): " $DIRREPORTES)
+		## Definir directorio de Logs
+		DIRLOG=$(obtener_directorios "Defina el directorio de Logs ($CURRENT_PATH/$DIRLOG): " $DIRLOG)
+		## Definir el directorio de archivos rechazados
+		DIRRECHAZADOS=$(obtener_directorios "Defina el directorio de Rechazados ($CURRENT_PATH/$DIRRECHAZADOS): " $DIRRECHAZADOS)
+
+		clear
+		## Muestra los directorios de instalacion
+		mostrar_directorios
+		echolog -p "Estado de la instalacion: LISTA"
+
+		echo -e "\n"
+		read -p "Desea continuar con la instalacion? ( S / N ): " CONTINUAR
+		echolog "Desea continuar con la instalacion? ( S / N ): $CONTINUAR"
+		## Enter se considera como 'S'
+		if [ -z "$CONTINUAR" -o "$CONTINUAR" == " " -o "$CONTINUAR" == "s" ]; then
+		  CONTINUAR="S"
+		fi
+	done
+fi
+  read -p "Iniciando Instalacion. Esta Ud. seguro? ( S / N ): " CONTINUAR
+  echolog "Iniciando Instalacion. Esta Ud. seguro? ( S / N ): $CONTINUAR"
+  ## Enter se considera como 'S'
+  if [ -z "$CONTINUAR" -o "$CONTINUAR" == " " -o "$CONTINUAR" == "s" ]; then
+    CONTINUAR="S"
+  fi
+
+  ## Interrumpir instalacion
+  if [ $CONTINUAR != "S" ]; then
+    fin_instalacion
+  fi
+  
+  ## Crear los directorios utlizados por el sistema
+  crear_directorios
+
+  ##Mover archivos de datos al directorio maestro y los scripts a BIN
+  mover_archivos
+  
+  ## Guardar configuracion en archivo .conf
+	if [ $REINSTALACION == "N" ]
+	then
+	  guardar_config
+	fi
+  
+  fin_instalacion

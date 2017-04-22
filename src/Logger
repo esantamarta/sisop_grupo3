@@ -24,7 +24,6 @@
 
 #Constantes:
 declare local SCRIPT_NAME="Logger"
-declare local LOG_FILE_NAME="Results.log"
 
 ###Ejecucion:
 ####Tomo los parametros:
@@ -53,7 +52,7 @@ then
 fi
 #######
 ##Inicializo variables
-declare local LOG_FILE_PATH="$DIRLOG/$LOG_FILE_NAME"
+declare local LOG_FILE_PATH="$DIRLOG/$CMD.log"
 
 ######
 #Valido que el archivo de log exista:
