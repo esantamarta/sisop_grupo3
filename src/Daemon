@@ -1,17 +1,86 @@
 #!/bin/bash
 
+#Punto 1. Ambiente– sprint 1
+#Ningún comando puede ser ejecutado sin la inicialización del ambiente 
+#Para determinar el directorio de novedades, aceptados, rechazados, etc. se deben leer las variables de ambiente.
+#echo $$
+
+############Inicializacion la utilizo para probar, cuando se integre quitar################
+GRUPO="/home/uje/sisop/sisop_grupo3/test_daemon"
+BINARIOS=$GRUPO"/BIN"
+MAESTROS=$GRUPO"/MAE"
+NOVEDADES=$GRUPO"/nov"
+ACEPTADOS=$GRUPO"/OK"
+RECHAZADOS=$GRUPO"/NOK"
+VALIDADOS=$GRUPO"/PROC"
+REPORTES=$GRUPO"/INFO"
+LOG=$GRUPO"/LOG"
+############################################################################################
+
+#REVISAR QUE LAS VARIABLES DE AMBIENTE SEAN LAS MISMAS QUE LAS SETEADAS EN EL INICIALIZADOR
+VARIABLES_AMBIENTE=($GRUPO $BINARIOS $MAESTROS $NOVEDADES $ACEPTADOS $RECHAZADOS $VALIDADOS $REPORTES $LOG)
+COUNT_VARIABLES_AMBIENTE=9
+
+# Valida que el ambiente haya sido inicializado previamente
+# Recibe el array de variables de ambiente y el contador de variables
+# Si alguna variable esta vacia, el size del array es menor al contador
+function validar_ambiente_inicializado() {
+	if [ ${#VARIABLES_AMBIENTE[@]} -ne $2 ] 
+		then
+		echo "LOG: AMBIENTE NO INICIALIZADO"
+		exit 1 #corta la ejecucion del programa
+	fi
+}
+
+
+# Recibe un archivo, devuelve true si es vacio
+function es_archivo_vacio() {
+
+	NOVEDAD=$NOVEDADES/$1
+	if [ -s "$NOVEDAD" ]
+	then
+		echo "EL ARCHIVO $1 NO ESTA VACIO"
+		return 1
+	else
+		echo "EL ARCHIVO $1 ESTA VACIO"
+		return 0
+	fi
+}
+
+
+# Recibe una lista de archivos de novedades
+# Valida que sean archivos validos
+function procesar_novedades() {
+	
+	for i in $1
+	do
+		es_archivo_vacio $i
+		
+	done
+
+}
+
+
+#Valida si el ambiente esta inicializado, sino sale del programa
+validar_ambiente_inicializado $VARIABLES_AMBIENTE $COUNT_VARIABLES_AMBIENTE
+
+
+echo "Daemon iniciado con process id: $$"
+
+
 #PUNTO 3
 #Se ejecuta en segundo plano
 #Cada vez que termina su trabajo duerme un tiempo “x” y vuelve a empezar.
 #Solo se lo puede terminar matando el proceso con el comando ./Stop pid
 
 # 1s = 1 segundo
-# 1m = 1 minuto
+# 1m = 1 minutocd 
 WAIT=5s  
 
 echo "LOG: Daemon Iniciado"
 
 LOOPS=0
+
 
 while true
 do
@@ -24,9 +93,22 @@ do
 # Chequear si hay novedades usando el directorio seteado en las variables de ambiente
 # Si existen archivos, validarlos (PUNTO 6). Si no hay archivos ir a ver si se invoca el comando de validación de aceptados (PUNTO 9 - SPRINT 2).
 
+NOV_FILES="$(ls $NOVEDADES)"
+if [ -z "$NOV_FILES" ]
+	then
+	echo "LOG: No hay novedades"
+	#PUNTO 5 - SPRINT 2: Invocar validador de aceptados???
+
+else
+	echo "LOG: Hay novedades para procesar"
+fi
+
+
 #PUNTO 6: Verificacion de novedades 
 # Si el archivo esta vacio, no es regular, o tiene nombre invalido => rechazarlo (PUNTO 7)
 # Si es valido => Aceptarlo (PUNTO 8)
+
+procesar_novedades "$NOV_FILES"
 
 #PUNTO 7: Rechazar
 # Si el archivo no supera las validaciones del PUNTO 6, moverlo al directorio de rechazados
