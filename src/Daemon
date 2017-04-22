@@ -1,18 +1,43 @@
 #!/bin/bash
 
-#Desarrollo del daemon
+#PUNTO 3
+#Se ejecuta en segundo plano
+#Cada vez que termina su trabajo duerme un tiempo “x” y vuelve a empezar.
+#Solo se lo puede terminar matando el proceso con el comando ./Stop pid
 
-WAIT=3
+# 1s = 1 segundo
+# 1m = 1 minuto
+WAIT=5s  
 
-echo "Iniciando Daemon"
+echo "LOG: Daemon Iniciado"
 
-LOOPS=1
+LOOPS=0
 
 while true
 do
-	echo "Loop nro: $LOOPS"
 	LOOPS=$(($LOOPS+1))
+	echo "LOG: Loop nro: $LOOPS" #PUNTO 4
+	
+#funcionalidad del daemon
+
+#PUNTO 5: Recepcion de novedades
+# Chequear si hay novedades usando el directorio seteado en las variables de ambiente
+# Si existen archivos, validarlos (PUNTO 6). Si no hay archivos ir a ver si se invoca el comando de validación de aceptados (PUNTO 9 - SPRINT 2).
+
+#PUNTO 6: Verificacion de novedades 
+# Si el archivo esta vacio, no es regular, o tiene nombre invalido => rechazarlo (PUNTO 7)
+# Si es valido => Aceptarlo (PUNTO 8)
+
+#PUNTO 7: Rechazar
+# Si el archivo no supera las validaciones del PUNTO 6, moverlo al directorio de rechazados
+# Registrar en el LOG
+# Prestar atencion al mover archivos de no pisar otro con el mismo nombre.
+
+#PUNTO 8: Aceptar
+# Mover los archivos validos al directorio de aceptados
+# Prestar atencion al mover archivos de no pisar otro con el mismo nombre.
+
 	sleep $WAIT
 done
 
-echo "chau"
+

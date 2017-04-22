@@ -32,7 +32,7 @@ function validar_ambiente_inicializado() {
 	fi
 }
 
-
+#Valida si el ambiente esta inicializado, sino sale del programa
 validar_ambiente_inicializado $VARIABLES_AMBIENTE $COUNT_VARIABLES_AMBIENTE
 
 #Ejecuta con & para independizar el proceso de la terminal
