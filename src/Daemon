@@ -47,18 +47,116 @@ function es_archivo_vacio() {
 	fi
 }
 
+function es_archivo_regular() {
+
+	NOVEDAD=$NOVEDADES/$1
+	if [ -f "$NOVEDAD" ]
+	then
+		echo "EL ARCHIVO $1 ES REGULAR"
+		return 1
+	else
+		echo "EL ARCHIVO $1 NO REGULAR"
+		return 0
+	fi
+}
+
+function tiene_formato_correcto() {
+
+	pattern='^[A-Z]*_[0-9]'
+	if [[ $1 =~ $pattern ]];
+	then
+		echo "TIENE FORMATO CORRECTO"
+		return 1
+	else
+		echo "TIENE FORMATO INCORRECTO"
+		return 0
+	fi
+}
+
+
+function existe_entidad() {
+	entidad=$(echo "$1" | cut -d "_" -f 1)
+	for j in $2
+	do
+		if [ $entidad == $j ]
+		then
+			echo "LA ENTIDAD DEL ARCHIVO $1 ES VALIDA"
+			return 1
+		fi
+	done
+	echo "LA ENTIDAD DEL ARCHIVO $1 NO ES VALIDA"
+	return 0
+}
+
+
+function es_fecha_valida() {
+	fecha=$(echo "$1" | cut -d "_" -f 2)
+	fecha=$(echo "$fecha" | cut -d "." -f 1)
+	patron='[0-9][0-1][0-9][0-3][0-9]'
+	if [[ $fecha =~ $patron ]] && date -d "$fecha" >/dev/null 2>&1	
+	then
+		condicion=$(date -d "now" "+%s")
+		fecha=$(date -d "$fecha" "+%s")
+		diferencia=$(( ((condicion - fecha) / 86400) ))
+		if [ "$diferencia" -lt "15" ]
+		then
+			echo "LA FECHA DEL ARCHIVO $1 ES VALIDA"
+			return 1
+		else
+			echo "LA FECHA DEL ARCHIVO $1 NO ES VALIDA"
+			return 0
+		fi
+	else
+		echo "LA FECHA DEL ARCHIVO $1 NO ES VALIDA"
+		return 0
+	fi
+}
+
 
 # Recibe una lista de archivos de novedades
 # Valida que sean archivos validos
 function procesar_novedades() {
-	
+	entidades=$(awk -F";" '{print $1}' $MAESTROS/"bamae.txt")
 	for i in $1
 	do
-		es_archivo_vacio $i
+		if es_archivo_vacio $i;
+		then
+			mv $NOVEDADES/$i $RECHAZADOS
+			continue
+		fi	
 		
-	done
+		if es_archivo_regular $i;
+		then
+			mv $NOVEDADES/$i $RECHAZADOS
+			continue
+		fi
+		
+		if tiene_formato_correcto $i;
+		then
+			mv $NOVEDADES/$i $RECHAZADOS
+			continue
+		fi
+		
+		if existe_entidad $i "$entidades";
+		then
+			mv $NOVEDADES/$i $RECHAZADOS
+			continue
+		fi
 
+		if es_fecha_valida $i;
+		then
+			mv $NOVEDADES/$i $RECHAZADOS
+			continue
+		fi
+		mv $NOVEDADES/$i $ACEPTADOS
+	done 
 }
+
+function invocar_validar_aceptados() {
+	hola="asd"
+}
+
+
 
 
 #Valida si el ambiente esta inicializado, sino sale del programa
@@ -97,10 +195,10 @@ NOV_FILES="$(ls $NOVEDADES)"
 if [ -z "$NOV_FILES" ]
 	then
 	echo "LOG: No hay novedades"
-	#PUNTO 5 - SPRINT 2: Invocar validador de aceptados???
-
+	invocar_validar_aceptados "$(ls $ACEPTADOS)"
 else
 	echo "LOG: Hay novedades para procesar"
+	procesar_novedades "$NOV_FILES"
 fi
 
 
@@ -108,7 +206,7 @@ fi
 # Si el archivo esta vacio, no es regular, o tiene nombre invalido => rechazarlo (PUNTO 7)
 # Si es valido => Aceptarlo (PUNTO 8)
 
-procesar_novedades "$NOV_FILES"
+
 
 #PUNTO 7: Rechazar
 # Si el archivo no supera las validaciones del PUNTO 6, moverlo al directorio de rechazados
