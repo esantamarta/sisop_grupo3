@@ -6,7 +6,7 @@
 #echo $$
 
 ############Inicializacion la utilizo para probar, cuando se integre quitar################
-GRUPO="/home/uje/sisop/sisop_grupo3/test_daemon"
+GRUPO="/home/g/Desktop/sisoptest"
 BINARIOS=$GRUPO"/BIN"
 MAESTROS=$GRUPO"/MAE"
 NOVEDADES=$GRUPO"/nov"
@@ -33,6 +33,21 @@ function validar_ambiente_inicializado() {
 }
 
 
+function es_archivo_ilegible () {
+
+	NOVEDAD=$NOVEDADES/$1
+	if [ -r "$NOVEDAD" ]
+	then
+		echo "EL ARCHIVO $1  ES LEGIBLE"
+		return 1
+	else
+		echo "EL ARCHIVO $1 NO ES LEGIBLE"
+		return 0
+	fi
+}
+
+
+
 # Recibe un archivo, devuelve true si es vacio
 function es_archivo_vacio() {
 
@@ -47,7 +62,7 @@ function es_archivo_vacio() {
 	fi
 }
 
-function es_archivo_regular() {
+function es_archivo_irregular() {
 
 	NOVEDAD=$NOVEDADES/$1
 	if [ -f "$NOVEDAD" ]
@@ -60,9 +75,9 @@ function es_archivo_regular() {
 	fi
 }
 
-function tiene_formato_correcto() {
+function tiene_formato_incorrecto() {
 
-	pattern='^[A-Z]*_[0-9]'
+	pattern='[A-Z]*_[0-9]*.txt'
 	if [[ $1 =~ $pattern ]];
 	then
 		echo "TIENE FORMATO CORRECTO"
@@ -74,7 +89,7 @@ function tiene_formato_correcto() {
 }
 
 
-function existe_entidad() {
+function no_existe_entidad() {
 	entidad=$(echo "$1" | cut -d "_" -f 1)
 	for j in $2
 	do
@@ -88,8 +103,12 @@ function existe_entidad() {
 	return 0
 }
 
+function mover_archivo() {
+	
+	mv --backup=t $1 $2
+}
 
-function es_fecha_valida() {
+function es_fecha_invalida() {
 	fecha=$(echo "$1" | cut -d "_" -f 2)
 	fecha=$(echo "$fecha" | cut -d "." -f 1)
 	patron='[0-9][0-1][0-9][0-3][0-9]'
@@ -119,36 +138,42 @@ function procesar_novedades() {
 	entidades=$(awk -F";" '{print $1}' $MAESTROS/"bamae.txt")
 	for i in $1
 	do
+		if es_archivo_ilegible $i
+		then
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			continue
+		fi	
+
 		if es_archivo_vacio $i;
 		then
-			mv $NOVEDADES/$i $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi	
 		
-		if es_archivo_regular $i;
+		if es_archivo_irregular $i;
 		then
-			mv $NOVEDADES/$i $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi
 		
-		if tiene_formato_correcto $i;
+		if tiene_formato_incorrecto $i;
 		then
-			mv $NOVEDADES/$i $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi
 		
-		if existe_entidad $i "$entidades";
+		if no_existe_entidad $i "$entidades";
 		then
-			mv $NOVEDADES/$i $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi
 
-		if es_fecha_valida $i;
+		if es_fecha_invalida $i;
 		then
-			mv $NOVEDADES/$i $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi
-		mv $NOVEDADES/$i $ACEPTADOS
+		mover_archivo "$NOVEDADES/$i" $ACEPTADOS
 	done 
 }
 
