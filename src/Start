@@ -8,7 +8,65 @@
 #Si esta función es invocada por un comando, actualizar el log indicando el resultado de la operación
 #Explicar su uso en el README.
 
-#Ejecuta con & para independizar el proceso de la terminal
-./Daemon &
 
+############Inicializacion la utilizo para probar, cuando se integre quitar################
+GRUPO="/home/uje/sisop/sisop_grupo3/test_daemon"
+BINARIOS=$GRUPO"/BIN"
+MAESTROS=$GRUPO"/MAE"
+NOVEDADES=$GRUPO"/nov"
+ACEPTADOS=$GRUPO"/OK"
+RECHAZADOS=$GRUPO"/NOK"
+VALIDADOS=$GRUPO"/PROC"
+REPORTES=$GRUPO"/INFO"
+export DIRLOG=$GRUPO"/log"
+############################################################################################
+
+
+#TODO: REVISAR QUE LAS VARIABLES DE AMBIENTE SEAN LAS MISMAS QUE LAS SETEADAS EN EL INICIALIZADOR
+VARIABLES_AMBIENTE=($GRUPO $BINARIOS $MAESTROS $NOVEDADES $ACEPTADOS $RECHAZADOS $VALIDADOS $REPORTES $DIRLOG)
+COUNT_VARIABLES_AMBIENTE=9
+
+PROCESS=$1
+
+
+function log() {
+
+	touch $DIRLOG/"Start.log"
+	./Logger "Start" "$1" "$2"
+
+}
+
+# Valida que el ambiente haya sido inicializado previamente
+# Recibe el array de variables de ambiente y el contador de variables
+# Si alguna variable esta vacia, el size del array es menor al contador
+function validar_ambiente_inicializado() {
+	if [ ${#VARIABLES_AMBIENTE[@]} -ne $2 ] 
+		then
+		echo "No se pudo ejecutar el proceso $PROCESS: Ambiente no inicializado"
+		exit 1 #corta la ejecucion del programa
+	fi
+}
+
+
+function validar_proceso_en_ejecucion() {
+
+	if pidof -x "$1"
+	then
+	    log "El proceso $1 ya se encuentra en ejecucion" "e"
+	    exit 1
+	fi
+
+}
+
+
+validar_ambiente_inicializado "$VARIABLES_AMBIENTE" "$COUNT_VARIABLES_AMBIENTE"
+
+validar_proceso_en_ejecucion "$PROCESS"
+
+#Ejecuta con & para independizar el proceso de la terminal
+#./Daemon &
+
+./"$PROCESS" &
+
+log "Iniciado el proceso $1 con pid: $!" "i"
 

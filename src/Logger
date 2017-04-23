@@ -1,0 +1,88 @@
+#!/bin/bash
+
+##Graba en un archivo .log en la ruta especificada por la varible de $DIRLOG el registro especificado
+##Se pueden grabar tres tipos de registro: Informativo, Alerta y Error
+##Parametros:
+#	$1: comando que se quiere loguear
+#	$2: mensaje a grabar
+#	$3: tipo de mensaje. Por default el valor es 'i'
+	#	i: informativo
+	#	a: alerta
+	#	e: error
+#########################	
+#Precondiciones:
+#	* Las siguientes variables deben estar bindeadas correctamente:
+#		$DIRLOG: direccion donde se encuentra instalado el scritp
+#		$USER: usuario que ejecuta el comando
+#	* El archivo de log existe con los permisos de escritura suficientes
+#########################
+##Codigos de retorno:
+#	1: error de parametros
+#	2: el archivo no existe
+#	3: el archivo no es un archivo regular
+######################################################################################################
+
+#Constantes:
+declare local SCRIPT_NAME="Logger"
+
+###Ejecucion:
+####Tomo los parametros:
+declare local CMD=$1
+declare local MESSAGE=$2
+declare local MESSAGE_TYPE=$3
+
+##Valido los parametros:
+if [ $# -lt 2 -o $# -gt 3 ]
+then
+	echo "$SCRIPT_NAME: La cantidad de parametros es incorrecta"
+	exit 1
+# Chequeo que los parametros sean correctos:
+elif [ $# -eq 3 ]
+then
+	if [ $MESSAGE_TYPE != "i" -a $MESSAGE_TYPE != "a" -a $MESSAGE_TYPE != "e" ]
+	then
+		echo "$SCRIPT_NAME: El parametro de tipo es erroneo. Valores validos: i, a, e"
+		exit 1
+	fi
+# Chequeo si se encuentra seteada la variable de direccion
+elif [ ! -v DIRLOG ]	
+then
+	echo "$SCRIPT_NAME: DIRLOG path is not set"
+	exit 1
+fi
+#######
+##Inicializo variables
+declare local LOG_FILE_PATH="$DIRLOG/$CMD.log"
+
+######
+#Valido que el archivo de log exista:
+if [ ! -e "$LOG_FILE_PATH" ]
+then
+	#echo "$SCRIPT_NAME: No existe el archivo de log en la direccion esperada: $LOG_FILE_PATH"
+	touch "$LOG_FILE_PATH"
+	chmod 666 "$LOG_FILE_PATH"
+elif [ ! -f "$LOG_FILE_PATH" ]
+then
+	echo "$SCRIPT_NAME: No existe el archivo de log: $LOG_FILE_PATH no es un archivo regular"
+	exit 3
+fi
+
+#####
+#Seteo el tipo de mensaje:
+if [ $# -eq 2 ]
+then 
+	MESSAGE_TYPE="INFO"
+elif [ $MESSAGE_TYPE == "i" ]
+then
+	MESSAGE_TYPE="INFO"
+elif [ $MESSAGE_TYPE == "a" ]
+then
+	MESSAGE_TYPE="ALERTA"
+else 
+	MESSAGE_TYPE="ERROR"
+fi
+
+##Grabo el mensaje:
+declare local DATE=$(date +"%d-%m-%Y %T")
+echo "$DATE | $USER | $CMD | [$MESSAGE_TYPE] | $MESSAGE" >> $LOG_FILE_PATH
+##
