@@ -58,8 +58,9 @@ declare local LOG_FILE_PATH="$DIRLOG/$CMD.log"
 #Valido que el archivo de log exista:
 if [ ! -e "$LOG_FILE_PATH" ]
 then
-	echo "$SCRIPT_NAME: No existe el archivo de log en la direccion esperada: $LOG_FILE_PATH"
-	exit 2
+	#echo "$SCRIPT_NAME: No existe el archivo de log en la direccion esperada: $LOG_FILE_PATH"
+	touch "$LOG_FILE_PATH"
+	chmod 666 "$LOG_FILE_PATH"
 elif [ ! -f "$LOG_FILE_PATH" ]
 then
 	echo "$SCRIPT_NAME: No existe el archivo de log: $LOG_FILE_PATH no es un archivo regular"
