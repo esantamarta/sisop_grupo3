@@ -117,10 +117,10 @@ function mover_archivo() {
 	      mv "$FILE" "$DEST"
 	else
 	      NUM=1
-	      while [[ -e "$DEST/$FILENAME_NOEXT$NUM.$EXT" ]]; do
+	      while [[ -e "$DEST"/"$FILENAME_NOEXT"_"$NUM"."$EXT" ]]; do
 	            (( NUM++ ))
 	      done
-	      mv "$FILE" "$DEST/$FILENAME_NOEXT$NUM.$EXT" 
+	      mv "$FILE" "$DEST"/"$FILENAME_NOEXT"_"$NUM"."$EXT" 
 	fi 
 }
 
@@ -153,8 +153,10 @@ function es_fecha_invalida() {
 function procesar_novedades() {
 	entidades=$(awk -F";" '{print $1}' $MAESTROS/"bamae.txt")
 	FILES=$1
-	for i in ${FILES[@]}
+	#for i in ${FILES[@]}
+	find $NOVEDADES -type f | while read FILE
 	do
+		i=$(basename "$FILE")
 		if es_archivo_ilegible "$i"
 		then
 			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
