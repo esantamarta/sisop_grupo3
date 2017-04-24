@@ -20,7 +20,7 @@ listar_ruta_arch() {
 
 ## Mostrar directorios
 mostrar_directorios() {
-  echolog -p "\nDirectorio de Configuracion: $CURRENT_PATH/$DIRCONF"
+  echolog -p "Directorio de Configuracion: $CURRENT_PATH/$DIRCONF"
   echolog -p "Directorio de Ejecutables: $CURRENT_PATH/$DIRBIN"
   echolog -p "Directorio de archivo Maestro de Bancos: $CURRENT_PATH/$DIRMAESTRO"
   echolog -p "Directorio de Recepcion de Novedades: $CURRENT_PATH/$DIRNOVEDADES"
@@ -34,6 +34,10 @@ mostrar_directorios() {
 mover_archivos() {
   ##Mover archivos de datos al directorio maestro
   cp "$CURRENT_PATH"/datos/* "$CURRENT_PATH/$DIRMAESTRO"
+
+	##Asigno permisos de ejecucion sobre los archivos
+  echolog -p "Asignando permisos al archivo Init"
+	chmod +x Init
 
   ##Mover scripts al directorio BIN
   mv Logger  "$CURRENT_PATH/$DIRBIN"
@@ -62,7 +66,7 @@ guardar_config() {
 ## Crear directorios de trabajo
 crear_directorios() {
 	actualizar_dir_reservados
-	echolog -p "\nCreando Estructuras de directorio . . . .\n"	
+	echolog -p "Creando Estructuras de directorio . . . .\n"	
 	declare local CONTINUO="S"
 	declare local resto="$RESERVA"
 	declare local dir=""
@@ -89,11 +93,22 @@ crear_directorios() {
 
 ## Escribir en el archivo log
 echolog() {
+	declare local DATE=$(date +"%d-%m-%Y %T")
   if [ $# == 1 ]; then 
-    echo -e "$1" >> "$LOG_FILE"
+    echo -e "$DATE | $USER | Setup | [INFO] | $1" >> "$LOG_FILE"
   else
     if [ "$1" == "-p" ]; then echo -e "$2" >&2; fi
-    echo -e "$2" >> "$LOG_FILE"
+    echo -e "$DATE | $USER | Setup | [INFO] | $2" >> "$LOG_FILE"
+  fi
+}
+
+logerror() {
+	declare local DATE=$(date +"%d-%m-%Y %T")
+  if [ $# == 1 ]; then 
+    echo -e "$DATE | $USER | Setup | [ERROR] | $1" >> "$LOG_FILE"
+  else
+    if [ "$1" == "-p" ]; then echo -e "$2" >&2; fi
+    echo -e "$DATE | $USER | Setup | [ERROR] | $2" >> "$LOG_FILE"
   fi
 }
 
@@ -127,7 +142,7 @@ verificar_version_perl() {
 	declare local PERL_VER=$(perl -e 'print $];')	
 	if [ $? -ne 0 ] #analizo si el comando tuvo errores, Perl no instalado
 	then
-		echolog -p "Perl no se encuentra instalado. Es necesario instalar al menos las version $MIN_VER"
+		logerror -p "Perl no se encuentra instalado. Es necesario instalar al menos las version $MIN_VER"
 		exit 1
 	fi
 	echolog "Perl instalado"
@@ -137,7 +152,7 @@ verificar_version_perl() {
 	then
 		echolog "La version de Perl es correcta"
 	else
-		echolog -p "Se necesita al menos Perl v$MIN_VER. Instalada se tiene: $PERL_VER"
+		logerror -p "Se necesita al menos Perl v$MIN_VER. Instalada se tiene: $PERL_VER"
 		exit 1
 	fi 
 }
@@ -148,7 +163,7 @@ recupere
 REINSTALACION="N"
 if [ -f "$CONF_FILE" ]; then
   clear
-  echo -e "###\tEl sistema ya se encuentra instalado\t###\n"
+  echolog "###\tEl sistema ya se encuentra instalado\t###\n"
   cargar_config
 	
 	if [ "$#" -eq "1" -a "$1" == "-t" ] # se ejecuto con parametro -t
