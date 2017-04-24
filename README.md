@@ -8,7 +8,7 @@ tar -zxvf filename.tgz
 
 El mismo creará la carpeta Grupo03 que contendrá los siguientes archivos:
 Setup
-Inicializador
+Init
 Logger
 Demon
 Stop_Daemon
