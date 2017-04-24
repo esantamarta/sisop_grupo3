@@ -1,0 +1,161 @@
+#!/bin/bash
+
+get_var()
+{
+	grep -m1 $1 $CONFIG_FILE | cut -d '=' -f 2
+}
+
+#Recibe una lista de archivos y valida si son legibles, sino les da permisos
+files_are_readable () {
+  for x do
+  	fileName=`basename $x`
+    [ -r "$x" ] || setReadeable "$x" $fileName || return 1
+  done
+}
+
+#Setea en readeable el archivo pasado por parámetro
+#Devuelve 0 si todo va bien, !=0 en caso contrario
+setReadeable() {
+	if ! test -r $1
+	then 
+		#TODO: LOG ARCHIVO NO TIENE PERMISOS NECESARIOS
+		logMsg "Asignando permiso de lectura a $2" 
+		chmod -f +r $1
+		#chmod +x $1
+		validateSetReadeable "$?" $2
+	fi
+}
+
+setExecutable() {
+	if ! test -x $1
+	then 
+		logMsg "Asignando permiso de escritura a $2" 
+		chmod -f +x $1
+		validateSetExecutable "$?" $2 || return 1
+	fi
+}
+
+#Valida el SetReadeable
+validateSetReadeable() {
+	if [ "$1" != "0" ] 
+	then
+		logMsg "ERROR: no se puede asignarle permiso de lectura a $2"	
+		return 1
+	fi
+}
+
+files_are_executable () {
+  for x do
+  	fileName=`basename $x`
+    [ -x "$x" ] || setExecutable "$x" $fileName || return 1
+  done
+}
+
+#$1=valor, $2=nombre de la variable
+#Valida si la variable tiene asignada algun valor, sino muestra mensaje y termina el programa
+isset_var() {
+	if [ -z "$1" ]  #TRUE if length of string is zero
+	then 
+		echo "No se puede inicializar la variable $2" 
+		return 1
+	fi
+}
+
+
+iniciar_daemon() {
+	./"$1" &			#Revisar como se inicia el Daemon
+	./Start Daemon    
+	pid=$(pgrep -x -n "Daemon")
+	logMsg "Daemon corriendo bajo el no.: $pid"
+}
+
+logMsg() {
+	echo "$1"
+}
+
+
+#**************** COMIENZO DEL SCRIPT ****************#
+
+export COMMAND="Init"
+
+CONFIG_FILE="dirconf/Setup.conf"
+
+#Valida que se haya ingresado un parámetro
+if [ "$CONFIG_FILE" = "" ] 
+then
+	echo "Debe indicar por parámetro un archivo de configuracion"
+	return 1
+
+#Valida que el archivo de configuracion tenga permiso de lectura
+elif ! test -r "$CONFIG_FILE" 
+then
+	echo "El archivo no puede ser leído"
+	return 1
+fi
+
+#1: veo si ya fue iniciado el ambiente
+if [ "$ENVIRONMENT_ISSET" = "true" ]
+then
+	return 1 #termina la ejecucion con 1 para indicar error
+fi
+
+#2: SETEAR LAS VARIABLES DE AMBIENTE
+export GRUPO=$(get_var "CURRENT_PATH")
+export BINARIOS=$(get_var "DIRBIN")
+export MAESTROS=$(get_var "DIRMAESTRO")
+export NOVEDADES=$(get_var "DIRNOVEDADES")
+export ACEPTADOS=$(get_var "DIRACEPTADOS")
+export VALIDADOS=$(get_var "DIRPROCESADOS")
+export REPORTES=$(get_var "DIRREPORTES")
+export LOG=$(get_var "DIRLOG")
+export RECHAZADOS=$(get_var "DIRRECHAZADOS")
+
+isset_var "$GRUPO" "GRUPO" || return 1
+isset_var "$BINARIOS" "BINARIOS" || return 1
+isset_var "$MAESTROS" "MAESTROS" || return 1
+isset_var "$NOVEDADES" "NOVEDADES" || return 1
+isset_var "$ACEPTADOS" "ACEPTADOS" || return 1
+isset_var "$VALIDADOS" "VALIDADOS" || return 1
+isset_var "$REPORTES" "REPORTES" || return 1
+isset_var "$LOG" "LOG" || return 1
+isset_var "$RECHAZADOS" "RECHAZADOS" || return 1
+
+BINARIOS=$GRUPO/$BINARIOS
+MAESTROS=$GRUPO/$MAESTROS
+NOVEDADES=$GRUPO/$NOVEDADES
+ACEPTADOS=$GRUPO/$ACEPTADOS
+VALIDADOS=$GRUPO/$VALIDADOS
+REPORTES=$GRUPO/$REPORTES
+LOG=$GRUPO/$LOG
+RECHAZADOS=$GRUPO/$RECHAZADOS
+
+PATH=$PATH:$BINARIOS
+
+#3: CHEQUEAR LOS PERMISOS
+files_are_readable $MAESTROS/* || return 1
+files_are_executable $BINARIOS/* || return 1
+
+
+export ENVIRONMENT_ISSET="true"
+MSG="El sistema se ha iniciado correctamente."
+logMsg "$MSG"
+
+MSG="¿Desea efectuar la activacion de Daemon? s/n"
+logMsg "$MSG"
+read start_daemon
+if [ $start_daemon = "s" ]
+then
+	MSG="Si: Iniciando Daemon..."
+	logMsg "$MSG"
+	iniciar_daemon	
+else
+	MSG="No: Saliendo de la aplicación"
+	logMsg "$MSG"
+
+	MSG="Puede iniciar el proceso durante la sesión ejecutando el comando:"
+	logMsg "$MSG"
+
+	MSG="Start &"
+	logMsg "$MSG"
+
+fi
