@@ -62,8 +62,7 @@ guardar_config() {
 ## Crear directorios de trabajo
 crear_directorios() {
 	actualizar_dir_reservados
-	echolog -p "\nCreando Estructuras de directorio . . . .\n"
-	
+	echolog -p "\nCreando Estructuras de directorio . . . .\n"	
 	declare local CONTINUO="S"
 	declare local resto="$RESERVA"
 	declare local dir=""
