@@ -1,0 +1,248 @@
+#!/bin/bash
+
+#Punto 1. Ambiente– sprint 1
+#Ningún comando puede ser ejecutado sin la inicialización del ambiente 
+#Para determinar el directorio de novedades, aceptados, rechazados, etc. se deben leer las variables de ambiente.
+#echo $$
+
+############Inicializacion la utilizo para probar, cuando se integre quitar################
+GRUPO="/home/g/Desktop/sisoptest"
+BINARIOS=$GRUPO"/BIN"
+MAESTROS=$GRUPO"/MAE"
+NOVEDADES=$GRUPO"/nov"
+ACEPTADOS=$GRUPO"/OK"
+RECHAZADOS=$GRUPO"/NOK"
+VALIDADOS=$GRUPO"/PROC"
+REPORTES=$GRUPO"/INFO"
+LOG=$GRUPO"/LOG"
+############################################################################################
+
+#REVISAR QUE LAS VARIABLES DE AMBIENTE SEAN LAS MISMAS QUE LAS SETEADAS EN EL INICIALIZADOR
+VARIABLES_AMBIENTE=($GRUPO $BINARIOS $MAESTROS $NOVEDADES $ACEPTADOS $RECHAZADOS $VALIDADOS $REPORTES $LOG)
+COUNT_VARIABLES_AMBIENTE=9
+
+# Valida que el ambiente haya sido inicializado previamente
+# Recibe el array de variables de ambiente y el contador de variables
+# Si alguna variable esta vacia, el size del array es menor al contador
+function validar_ambiente_inicializado() {
+	if [ ${#VARIABLES_AMBIENTE[@]} -ne $2 ] 
+		then
+		echo "LOG: AMBIENTE NO INICIALIZADO"
+		exit 1 #corta la ejecucion del programa
+	fi
+}
+
+
+function es_archivo_ilegible () {
+
+	NOVEDAD=$NOVEDADES/$1
+	if [ -r "$NOVEDAD" ]
+	then
+		echo "EL ARCHIVO $1  ES LEGIBLE"
+		return 1
+	else
+		echo "EL ARCHIVO $1 NO ES LEGIBLE"
+		return 0
+	fi
+}
+
+
+
+# Recibe un archivo, devuelve true si es vacio
+function es_archivo_vacio() {
+
+	NOVEDAD=$NOVEDADES/$1
+	if [ -s "$NOVEDAD" ]
+	then
+		echo "EL ARCHIVO $1 NO ESTA VACIO"
+		return 1
+	else
+		echo "EL ARCHIVO $1 ESTA VACIO"
+		return 0
+	fi
+}
+
+function es_archivo_irregular() {
+
+	NOVEDAD=$NOVEDADES/$1
+	if [ -f "$NOVEDAD" ]
+	then
+		echo "EL ARCHIVO $1 ES REGULAR"
+		return 1
+	else
+		echo "EL ARCHIVO $1 NO REGULAR"
+		return 0
+	fi
+}
+
+function tiene_formato_incorrecto() {
+
+	pattern='[A-Z]*_[0-9]*.txt'
+	if [[ $1 =~ $pattern ]];
+	then
+		echo "TIENE FORMATO CORRECTO"
+		return 1
+	else
+		echo "TIENE FORMATO INCORRECTO"
+		return 0
+	fi
+}
+
+
+function no_existe_entidad() {
+	entidad=$(echo "$1" | cut -d "_" -f 1)
+	for j in $2
+	do
+		if [ $entidad == $j ]
+		then
+			echo "LA ENTIDAD DEL ARCHIVO $1 ES VALIDA"
+			return 1
+		fi
+	done
+	echo "LA ENTIDAD DEL ARCHIVO $1 NO ES VALIDA"
+	return 0
+}
+
+function mover_archivo() {
+	
+	mv --backup=t $1 $2
+}
+
+function es_fecha_invalida() {
+	fecha=$(echo "$1" | cut -d "_" -f 2)
+	fecha=$(echo "$fecha" | cut -d "." -f 1)
+	patron='[0-9][0-1][0-9][0-3][0-9]'
+	if [[ $fecha =~ $patron ]] && date -d "$fecha" >/dev/null 2>&1	
+	then
+		condicion=$(date -d "now" "+%s")
+		fecha=$(date -d "$fecha" "+%s")
+		diferencia=$(( ((condicion - fecha) / 86400) ))
+		if [ "$diferencia" -lt "15" ]
+		then
+			echo "LA FECHA DEL ARCHIVO $1 ES VALIDA"
+			return 1
+		else
+			echo "LA FECHA DEL ARCHIVO $1 NO ES VALIDA"
+			return 0
+		fi
+	else
+		echo "LA FECHA DEL ARCHIVO $1 NO ES VALIDA"
+		return 0
+	fi
+}
+
+
+# Recibe una lista de archivos de novedades
+# Valida que sean archivos validos
+function procesar_novedades() {
+	entidades=$(awk -F";" '{print $1}' $MAESTROS/"bamae.txt")
+	for i in $1
+	do
+		if es_archivo_ilegible $i
+		then
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			continue
+		fi	
+
+		if es_archivo_vacio $i;
+		then
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			continue
+		fi	
+		
+		if es_archivo_irregular $i;
+		then
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			continue
+		fi
+		
+		if tiene_formato_incorrecto $i;
+		then
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			continue
+		fi
+		
+		if no_existe_entidad $i "$entidades";
+		then
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			continue
+		fi
+
+		if es_fecha_invalida $i;
+		then
+			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			continue
+		fi
+		mover_archivo "$NOVEDADES/$i" $ACEPTADOS
+	done 
+}
+
+function invocar_validar_aceptados() {
+	hola="asd"
+}
+
+
+
+
+#Valida si el ambiente esta inicializado, sino sale del programa
+validar_ambiente_inicializado $VARIABLES_AMBIENTE $COUNT_VARIABLES_AMBIENTE
+
+
+echo "Daemon iniciado con process id: $$"
+
+
+#PUNTO 3
+#Se ejecuta en segundo plano
+#Cada vez que termina su trabajo duerme un tiempo “x” y vuelve a empezar.
+#Solo se lo puede terminar matando el proceso con el comando ./Stop pid
+
+# 1s = 1 segundo
+# 1m = 1 minutocd 
+WAIT=5s  
+
+echo "LOG: Daemon Iniciado"
+
+LOOPS=0
+
+
+while true
+do
+	LOOPS=$(($LOOPS+1))
+	echo "LOG: Loop nro: $LOOPS" #PUNTO 4
+	
+#funcionalidad del daemon
+
+#PUNTO 5: Recepcion de novedades
+# Chequear si hay novedades usando el directorio seteado en las variables de ambiente
+# Si existen archivos, validarlos (PUNTO 6). Si no hay archivos ir a ver si se invoca el comando de validación de aceptados (PUNTO 9 - SPRINT 2).
+
+NOV_FILES="$(ls $NOVEDADES)"
+if [ -z "$NOV_FILES" ]
+	then
+	echo "LOG: No hay novedades"
+	invocar_validar_aceptados "$(ls $ACEPTADOS)"
+else
+	echo "LOG: Hay novedades para procesar"
+	procesar_novedades "$NOV_FILES"
+fi
+
+
+#PUNTO 6: Verificacion de novedades 
+# Si el archivo esta vacio, no es regular, o tiene nombre invalido => rechazarlo (PUNTO 7)
+# Si es valido => Aceptarlo (PUNTO 8)
+
+
+
+#PUNTO 7: Rechazar
+# Si el archivo no supera las validaciones del PUNTO 6, moverlo al directorio de rechazados
+# Registrar en el LOG
+# Prestar atencion al mover archivos de no pisar otro con el mismo nombre.
+
+#PUNTO 8: Aceptar
+# Mover los archivos validos al directorio de aceptados
+# Prestar atencion al mover archivos de no pisar otro con el mismo nombre.
+
+	sleep $WAIT
+done
+
+

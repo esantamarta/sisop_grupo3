@@ -85,4 +85,3 @@ fi
 ##Grabo el mensaje:
 declare local DATE=$(date +"%d-%m-%Y %T")
 echo "$DATE | $USER | $CMD | [$MESSAGE_TYPE] | $MESSAGE" >> $LOG_FILE_PATH
-##
