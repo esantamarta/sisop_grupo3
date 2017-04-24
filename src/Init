@@ -44,6 +44,15 @@ validateSetReadeable() {
 	fi
 }
 
+#Valida el SetExecutable
+validateSetExecutable() {
+	if [ "$1" != "0" ] 
+	then
+		logMsg "ERROR: no se puede asignarle permiso de ejecucion a $2"	
+		return 1
+	fi
+}
+
 files_are_executable () {
   for x do
   	fileName=`basename $x`
@@ -78,7 +87,9 @@ logMsg() {
 
 export COMMAND="Init"
 
-CONFIG_FILE="dirconf/Setup.conf"
+CONFIG_FILE="$1"
+
+
 
 #Valida que se haya ingresado un parámetro
 if [ "$CONFIG_FILE" = "" ] 
@@ -132,8 +143,8 @@ RECHAZADOS=$GRUPO/$RECHAZADOS
 PATH=$PATH:$BINARIOS
 
 #3: CHEQUEAR LOS PERMISOS
-files_are_readable $MAESTROS/* || return 1
-files_are_executable $BINARIOS/* || return 1
+files_are_readable "$MAESTROS"/* || return 1
+files_are_executable "$BINARIOS"/* || return 1
 
 
 export ENVIRONMENT_ISSET="true"
