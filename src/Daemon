@@ -6,15 +6,15 @@
 #echo $$
 
 ############Inicializacion la utilizo para probar, cuando se integre quitar################
-GRUPO=$PWD"/sisoptest"
-BINARIOS=$GRUPO"/BIN"
-MAESTROS=$GRUPO"/MAE"
-NOVEDADES=$GRUPO"/nov"
-ACEPTADOS=$GRUPO"/OK"
-RECHAZADOS=$GRUPO"/NOK"
-VALIDADOS=$GRUPO"/PROC"
-REPORTES=$GRUPO"/INFO"
-LOG=$GRUPO"/LOG"
+#GRUPO=$PWD"/sisoptest"
+#BINARIOS=$GRUPO"/BIN"
+#MAESTROS=$GRUPO"/MAE"
+##NOVEDADES=$GRUPO"/nov"
+#ACEPTADOS=$GRUPO"/OK"
+#RECHAZADOS=$GRUPO"/NOK"
+#VALIDADOS=$GRUPO"/PROC"
+#REPORTES=$GRUPO"/INFO"
+#LOG=$GRUPO"/LOG"
 ############################################################################################
 
 #REVISAR QUE LAS VARIABLES DE AMBIENTE SEAN LAS MISMAS QUE LAS SETEADAS EN EL INICIALIZADOR
