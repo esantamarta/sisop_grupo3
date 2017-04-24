@@ -6,7 +6,7 @@
 #echo $$
 
 ############Inicializacion la utilizo para probar, cuando se integre quitar################
-GRUPO="/home/g/Desktop/sisoptest"
+GRUPO=$PWD"/sisoptest"
 BINARIOS=$GRUPO"/BIN"
 MAESTROS=$GRUPO"/MAE"
 NOVEDADES=$GRUPO"/nov"
@@ -34,7 +34,6 @@ function validar_ambiente_inicializado() {
 
 
 function es_archivo_ilegible () {
-
 	NOVEDAD=$NOVEDADES/$1
 	if [ -r "$NOVEDAD" ]
 	then
@@ -103,9 +102,26 @@ function no_existe_entidad() {
 	return 0
 }
 
+
+#mover_archivo origen destino
+#Si el archivo ya existe en destino, le agrega un indice
+#ej: archivo.txt, archivo1.txt, archivo2.txt
 function mover_archivo() {
 	
-	mv --backup=t $1 $2
+	FILE=$1
+	FILENAME=$(basename "$FILE")
+	DEST=$2
+	FILENAME_NOEXT=${FILENAME%.*}
+	EXT=${FILE##*.}
+	if [[ ! -e "$DEST/$FILENAME" ]]; then
+	      mv "$FILE" "$DEST"
+	else
+	      NUM=1
+	      while [[ -e "$DEST/$FILENAME_NOEXT$NUM.$EXT" ]]; do
+	            (( NUM++ ))
+	      done
+	      mv "$FILE" "$DEST/$FILENAME_NOEXT$NUM.$EXT" 
+	fi 
 }
 
 function es_fecha_invalida() {
@@ -136,39 +152,40 @@ function es_fecha_invalida() {
 # Valida que sean archivos validos
 function procesar_novedades() {
 	entidades=$(awk -F";" '{print $1}' $MAESTROS/"bamae.txt")
-	for i in $1
+	FILES=$1
+	for i in ${FILES[@]}
 	do
-		if es_archivo_ilegible $i
+		if es_archivo_ilegible "$i"
 		then
 			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi	
 
-		if es_archivo_vacio $i;
+		if es_archivo_vacio "$i";
 		then
 			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi	
 		
-		if es_archivo_irregular $i;
+		if es_archivo_irregular "$i";
 		then
 			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi
 		
-		if tiene_formato_incorrecto $i;
+		if tiene_formato_incorrecto "$i";
 		then
 			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi
 		
-		if no_existe_entidad $i "$entidades";
+		if no_existe_entidad "$i" "$entidades";
 		then
 			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
 		fi
 
-		if es_fecha_invalida $i;
+		if es_fecha_invalida "$i";
 		then
 			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
 			continue
@@ -198,7 +215,7 @@ echo "Daemon iniciado con process id: $$"
 
 # 1s = 1 segundo
 # 1m = 1 minutocd 
-WAIT=5s  
+WAIT=30s  
 
 echo "LOG: Daemon Iniciado"
 
