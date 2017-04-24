@@ -27,20 +27,38 @@ COUNT_VARIABLES_AMBIENTE=9
 function validar_ambiente_inicializado() {
 	if [ ${#VARIABLES_AMBIENTE[@]} -ne $2 ] 
 		then
-		echo "LOG: AMBIENTE NO INICIALIZADO"
+		#echo "LOG: AMBIENTE NO INICIALIZADO"
+		#Si el ambiente no esta inicializado no puedo guardar en log
+		echo "El ambiente no se encuentra inicializado. Saliendo..."
 		exit 1 #corta la ejecucion del programa
 	fi
 }
 
 
+function log() {
+	./Logger "Daemon" "$1" "$2"
+}
+
+function logInfo() {
+	log "$1" "i"
+}
+
+function logAlert() {
+	log "$1" "a"
+}
+
+function logError() {
+	log "$1" "e"
+}
+
 function es_archivo_ilegible () {
 	NOVEDAD=$NOVEDADES/$1
 	if [ -r "$NOVEDAD" ]
 	then
-		echo "EL ARCHIVO $1  ES LEGIBLE"
+		logInfo "El archivo $1  es legible"
 		return 1
 	else
-		echo "EL ARCHIVO $1 NO ES LEGIBLE"
+		logInfo "El archivo $1 no es legible"
 		return 0
 	fi
 }
@@ -53,10 +71,10 @@ function es_archivo_vacio() {
 	NOVEDAD=$NOVEDADES/$1
 	if [ -s "$NOVEDAD" ]
 	then
-		echo "EL ARCHIVO $1 NO ESTA VACIO"
+		logInfo "El archivo $1 no esta vacio"
 		return 1
 	else
-		echo "EL ARCHIVO $1 ESTA VACIO"
+		logInfo "El archivo $1 esta vacio"
 		return 0
 	fi
 }
@@ -66,10 +84,10 @@ function es_archivo_irregular() {
 	NOVEDAD=$NOVEDADES/$1
 	if [ -f "$NOVEDAD" ]
 	then
-		echo "EL ARCHIVO $1 ES REGULAR"
+		logInfo "El archivo $1 es regular"
 		return 1
 	else
-		echo "EL ARCHIVO $1 NO REGULAR"
+		logInfo "El archivo $1 no regular"
 		return 0
 	fi
 }
@@ -79,10 +97,10 @@ function tiene_formato_incorrecto() {
 	pattern='[A-Z]*_[0-9]*.txt'
 	if [[ $1 =~ $pattern ]];
 	then
-		echo "TIENE FORMATO CORRECTO"
+		logInfo "$1 tiene formato correcto"
 		return 1
 	else
-		echo "TIENE FORMATO INCORRECTO"
+		logInfo "$1 tiene formato incorrecto"
 		return 0
 	fi
 }
@@ -94,11 +112,11 @@ function no_existe_entidad() {
 	do
 		if [ $entidad == $j ]
 		then
-			echo "LA ENTIDAD DEL ARCHIVO $1 ES VALIDA"
+			logInfo "La entidad del archivo $1 es valida"
 			return 1
 		fi
 	done
-	echo "LA ENTIDAD DEL ARCHIVO $1 NO ES VALIDA"
+	logInfo "La entidad del archivo $1 no es valida"
 	return 0
 }
 
@@ -108,11 +126,13 @@ function no_existe_entidad() {
 #ej: archivo.txt, archivo1.txt, archivo2.txt
 function mover_archivo() {
 	
+	
 	FILE=$1
 	FILENAME=$(basename "$FILE")
 	DEST=$2
 	FILENAME_NOEXT=${FILENAME%.*}
 	EXT=${FILE##*.}
+	logInfo "Moviendo $FILENAME al directorio $DEST"
 	if [[ ! -e "$DEST/$FILENAME" ]]; then
 	      mv "$FILE" "$DEST"
 	else
@@ -120,6 +140,7 @@ function mover_archivo() {
 	      while [[ -e "$DEST"/"$FILENAME_NOEXT"_"$NUM"."$EXT" ]]; do
 	            (( NUM++ ))
 	      done
+	      logAlert "$FILENAME renombrado a $FILENAME_NOEXT"_"$NUM"."$EXT"
 	      mv "$FILE" "$DEST"/"$FILENAME_NOEXT"_"$NUM"."$EXT" 
 	fi 
 }
@@ -135,14 +156,14 @@ function es_fecha_invalida() {
 		diferencia=$(( ((condicion - fecha) / 86400) ))
 		if [ "$diferencia" -lt "15" ]
 		then
-			echo "LA FECHA DEL ARCHIVO $1 ES VALIDA"
+			logInfo "La fecha del archivo $1 es valida"
 			return 1
 		else
-			echo "LA FECHA DEL ARCHIVO $1 NO ES VALIDA"
+			logInfo "La fecha del archivo $1 no es valida"
 			return 0
 		fi
 	else
-		echo "LA FECHA DEL ARCHIVO $1 NO ES VALIDA"
+		logInfo "La fecha del archivo $1 no es valida"
 		return 0
 	fi
 }
@@ -151,7 +172,13 @@ function es_fecha_invalida() {
 # Recibe una lista de archivos de novedades
 # Valida que sean archivos validos
 function procesar_novedades() {
+	if [ ! -f "$MAESTROS"/"bamae.txt" ] 
+	then
+		logError "No se encuentra el archivo de maestros. Las novedades no seran procesadas"
+		return 1
+	fi
 	entidades=$(awk -F";" '{print $1}' $MAESTROS/"bamae.txt")
+
 	FILES=$1
 	#for i in ${FILES[@]}
 	find $NOVEDADES -type f | while read FILE
@@ -206,8 +233,11 @@ function invocar_validar_aceptados() {
 #Valida si el ambiente esta inicializado, sino sale del programa
 validar_ambiente_inicializado $VARIABLES_AMBIENTE $COUNT_VARIABLES_AMBIENTE
 
+touch "$LOG"/"Daemon.log" 
 
-echo "Daemon iniciado con process id: $$"
+logInfo " "
+logInfo "Daemon iniciado con process id: $$"
+logInfo " "
 
 
 #PUNTO 3
@@ -216,10 +246,8 @@ echo "Daemon iniciado con process id: $$"
 #Solo se lo puede terminar matando el proceso con el comando ./Stop pid
 
 # 1s = 1 segundo
-# 1m = 1 minutocd 
-WAIT=30s  
-
-echo "LOG: Daemon Iniciado"
+# 1m = 1 minuto 
+WAIT=10s  
 
 LOOPS=0
 
@@ -227,7 +255,7 @@ LOOPS=0
 while true
 do
 	LOOPS=$(($LOOPS+1))
-	echo "LOG: Loop nro: $LOOPS" #PUNTO 4
+	logInfo "Loop nro: $LOOPS" #PUNTO 4
 	
 #funcionalidad del daemon
 
@@ -238,10 +266,10 @@ do
 NOV_FILES="$(ls $NOVEDADES)"
 if [ -z "$NOV_FILES" ]
 	then
-	echo "LOG: No hay novedades"
+	logInfo "No hay novedades"
 	invocar_validar_aceptados "$(ls $ACEPTADOS)"
 else
-	echo "LOG: Hay novedades para procesar"
+	logInfo "Hay novedades para procesar"
 	procesar_novedades "$NOV_FILES"
 fi
 
