@@ -155,7 +155,7 @@ else
 	MSG="Puede iniciar el proceso durante la sesión ejecutando el comando:"
 	logMsg "$MSG"
 
-	MSG="Start &"
+	MSG="Start Daemon"
 	logMsg "$MSG"
 
 fi
