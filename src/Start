@@ -10,7 +10,6 @@
 
 
 ############Inicializacion la utilizo para probar, cuando se integre quitar################
-GRUPO="/home/uje/sisop/sisop_grupo3/test_daemon"
 BINARIOS=$GRUPO"/BIN"
 MAESTROS=$GRUPO"/MAE"
 NOVEDADES=$GRUPO"/nov"
