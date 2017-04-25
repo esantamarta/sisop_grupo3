@@ -163,7 +163,7 @@ recupere
 REINSTALACION="N"
 if [ -f "$CONF_FILE" ]; then
   clear
-  echolog "###\tEl sistema ya se encuentra instalado\t###\n"
+  echolog -p "###\tEl sistema ya se encuentra instalado\t###\n"
   cargar_config
 	
 	if [ "$#" -eq "1" -a "$1" == "-t" ] # se ejecuto con parametro -t
