@@ -72,7 +72,7 @@ isset_var() {
 
 
 iniciar_daemon() {
-	./"$1" &			#Revisar como se inicia el Daemon
+	#./"$1" &			#Revisar como se inicia el Daemon
 	./Start Daemon    
 	pid=$(pgrep -x -n "Daemon")
 	logMsg "Daemon corriendo bajo el no.: $pid"
