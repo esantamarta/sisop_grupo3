@@ -10,14 +10,14 @@
 
 
 ############Inicializacion la utilizo para probar, cuando se integre quitar################
-BINARIOS=$GRUPO"/BIN"
-MAESTROS=$GRUPO"/MAE"
-NOVEDADES=$GRUPO"/nov"
-ACEPTADOS=$GRUPO"/OK"
-RECHAZADOS=$GRUPO"/NOK"
-VALIDADOS=$GRUPO"/PROC"
-REPORTES=$GRUPO"/INFO"
-export DIRLOG=$GRUPO"/log"
+#BINARIOS=$GRUPO"/BIN"
+#MAESTROS=$GRUPO"/MAE"
+#NOVEDADES=$GRUPO"/nov"
+#ACEPTADOS=$GRUPO"/OK"
+#RECHAZADOS=$GRUPO"/NOK"
+#VALIDADOS=$GRUPO"/PROC"
+#REPORTES=$GRUPO"/INFO"
+#export DIRLOG=$GRUPO"/log"
 ############################################################################################
 
 
