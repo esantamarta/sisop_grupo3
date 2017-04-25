@@ -30,7 +30,7 @@ PROCESS=$1
 
 function log() {
 
-	touch $DIRLOG/"Start.log"
+	#touch $LOG/"Start.log"
 	./Logger "Start" "$1" "$2"
 
 }

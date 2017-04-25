@@ -22,6 +22,7 @@
 #	3: el archivo no es un archivo regular
 ######################################################################################################
 
+declare local DIRLOG=$LOG
 #Constantes:
 declare local SCRIPT_NAME="Logger"
 
