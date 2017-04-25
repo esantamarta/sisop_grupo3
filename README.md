@@ -44,7 +44,7 @@ Antes de ejecutar el sistema deberá inicializarlo mediante el proceso Inicializ
 . ./Init ../dirconf/Setup.conf
 
 Una vez inicializada la aplicación podrá lanzar el proceso Demonep con el comando:
-./Deamon &
+./Start Daemon
 
 En caso de querer detener el proceso Demonep deberá ejecutar:
-./Stop_Daemon Deamon
+./Stop Deamon
