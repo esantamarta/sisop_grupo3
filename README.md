@@ -41,7 +41,7 @@ reportes
 
 ######### EJECUCIÓN #########
 Antes de ejecutar el sistema deberá inicializarlo mediante el proceso Inicializador, para eso deberá ejecutar, desde el directorio bin, el siguiente comando:
-. ./Inicializador ../dirconf/Setup.conf
+. ./Init ../dirconf/Setup.conf
 
 Una vez inicializada la aplicación podrá lanzar el proceso Demonep con el comando:
 ./Deamon &
