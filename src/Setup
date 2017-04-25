@@ -157,8 +157,6 @@ verificar_version_perl() {
 	fi 
 }
 
-recupere
-
 # Verificar si el sistema esta instalado
 REINSTALACION="N"
 if [ -f "$CONF_FILE" ]; then
