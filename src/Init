@@ -107,6 +107,7 @@ fi
 #1: veo si ya fue iniciado el ambiente
 if [ "$ENVIRONMENT_ISSET" = "true" ]
 then
+	echo "El ambiente ya se encuentra iniciado"
 	return 1 #termina la ejecucion con 1 para indicar error
 fi
 
