@@ -157,7 +157,7 @@ verificar_version_perl() {
 	fi 
 }
 
-recupere
+#recupere
 
 # Verificar si el sistema esta instalado
 REINSTALACION="N"
