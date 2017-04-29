@@ -75,20 +75,56 @@ crear_directorios() {
 		dir=$(echo "$resto" | sed 's/\([^|]*\)|.*/\1/')
 		resto=$(echo "$resto" | sed 's/[^|]*|\(.*\)/\1/')
 
-		if [ ! -d "$CURRENT_PATH/$dir" ]; then
-			mkdir "$CURRENT_PATH/$dir"
+		##Creo los subdirectorios de ser necesario:
+		SUB_PATH=""
+		CONTINUAR="S"
+		while [ "$CONTINUAR" == "S" ]
+		do
+			CADENA_DIR=$(echo "$dir" | sed 's|.*/.*||')
+			if [ "$CADENA_DIR" != "$dir" ]
+			then
+				directorio=$(echo "$dir" | sed 's|\(^[^/]*\)/.*|\1|')
+				dir=$(echo "$dir" | sed 's|^[^/]*/\(.*\)|\1|')
+				if [ ! -d "$CURRENT_PATH/$SUB_PATH$directorio" ]; then
+					echolog "Creando el directorio: $CURRENT_PATH/$SUB_PATH$directorio"						
+					mkdir "$CURRENT_PATH/$SUB_PATH$directorio" 
+					if [ ! -d "$CURRENT_PATH/$SUB_PATH$directorio" ]; then
+						echolog -p "Hubo un error creando el directorio: $CURRENT_PATH/$SUB_PATH$directorio"	
+					else
+						echolog "Directorio $CURRENT_PATH/$SUB_PATH$directorio creado"
+					fi									
+				else
+					echolog "El directorio $CURRENT_PATH/$SUB_PATH$directorio ya existe"	
+				fi
+				SUB_PATH="$SUB_PATH$directorio/"
+				if [ "$dir" == ""	]
+				then
+					CONTINUAR="N"
+				fi
+			else
+				break
+			fi
+		done
+
+		if [ ! -d "$CURRENT_PATH/$SUB_PATH$dir" ]; then
+			echolog "Creando el directorio: $CURRENT_PATH/$SUB_PATH$dir"						
+			mkdir "$CURRENT_PATH/$SUB_PATH$dir" 
+			if [ ! -d "$CURRENT_PATH/$SUB_PATH$dir" ]; then
+				echolog -p "Hubo un error creando el directorio: $CURRENT_PATH/$SUB_PATH$dir"	
+			else
+				echolog "Directorio $CURRENT_PATH/$SUB_PATH$dir creado"
+			fi									
+		else
+			echolog "El directorio $CURRENT_PATH/$SUB_PATH$dir ya existe"	
 		fi
 		if [ -z "$resto" ]
 		then
 			CONTINUO="N"
 		fi
 	done
-
-  #for dir in $RESERVA do
-  #  if [ ! -d "$CURRENT_PATH/$dir" ]; then
-  #    mkdir "$CURRENT_PATH/$dir"  
-  #  fi
-  #done
+	if [ ! -d "$CURRENT_PATH/$SUB_PATH$dir" ]; then
+		echolog -p "Hubo un error creando el directorio: $CURRENT_PATH/$SUB_PATH$dir"	
+	fi
 }
 
 ## Escribir en el archivo log
@@ -214,12 +250,23 @@ obtener_directorios() {
     ## Validar lo ingresado por el usuario
     if [ ! -z "$INGRESO" -a "$INGRESO" != " " ]; then
       VALID="Y"
-
+		
 			declare local CONTINUO="S"
 			declare local resto="$RESERVA"
 			declare local rname=""
 			while [ $CONTINUO == "S" ]
 			do
+				#Veo que no empiece ni termine con barra
+				BARRA_DELANTE=$(echo "$INGRESO" | sed 's|^\/.*|Y|')
+				BARRA_ATRAS=$(echo "$INGRESO" | sed 's|.*\/$|Y|')
+
+				if [ "$BARRA_DELANTE" == "Y" -o "$BARRA_ATRAS" == "Y" ] 
+				then
+					echo -e "\n# El nombre $INGRESO, no puede empezar ni terminar con barras \n" >&2
+					VALID="N"
+					break
+				fi
+		
 				rname=$(echo "$resto" | sed 's/\([^|]*\)|.*/\1/')
 				resto=$(echo "$resto" | sed 's/[^|]*|\(.*\)/\1/')
 
