@@ -224,7 +224,8 @@ function procesar_novedades() {
 }
 
 function invocar_validar_aceptados() {
-	hola="asd"
+	read -p "¿Desea validar los archivos aceptados?" INPUT
+	echo $INPUT
 }
 
 
