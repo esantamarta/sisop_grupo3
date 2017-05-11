@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "Validate started"
+
+
+echo "Validate ended"

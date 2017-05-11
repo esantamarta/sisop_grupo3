@@ -224,8 +224,9 @@ function procesar_novedades() {
 }
 
 function invocar_validar_aceptados() {
-	read -p "¿Desea validar los archivos aceptados?" INPUT
-	echo $INPUT
+	./Start Validate &
+	MSG="Validate iniciado con id: $!"
+	logInfo "$MSG" 
 }
 
 
@@ -241,11 +242,6 @@ logInfo "Daemon iniciado con process id: $$"
 logInfo " "
 
 
-#PUNTO 3
-#Se ejecuta en segundo plano
-#Cada vez que termina su trabajo duerme un tiempo “x” y vuelve a empezar.
-#Solo se lo puede terminar matando el proceso con el comando ./Stop pid
-
 # 1s = 1 segundo
 # 1m = 1 minuto 
 WAIT=10s  
@@ -260,10 +256,6 @@ do
 	
 #funcionalidad del daemon
 
-#PUNTO 5: Recepcion de novedades
-# Chequear si hay novedades usando el directorio seteado en las variables de ambiente
-# Si existen archivos, validarlos (PUNTO 6). Si no hay archivos ir a ver si se invoca el comando de validación de aceptados (PUNTO 9 - SPRINT 2).
-
 NOV_FILES="$(ls $NOVEDADES)"
 if [ -z "$NOV_FILES" ]
 	then
@@ -273,22 +265,6 @@ else
 	logInfo "Hay novedades para procesar"
 	procesar_novedades "$NOV_FILES"
 fi
-
-
-#PUNTO 6: Verificacion de novedades 
-# Si el archivo esta vacio, no es regular, o tiene nombre invalido => rechazarlo (PUNTO 7)
-# Si es valido => Aceptarlo (PUNTO 8)
-
-
-
-#PUNTO 7: Rechazar
-# Si el archivo no supera las validaciones del PUNTO 6, moverlo al directorio de rechazados
-# Registrar en el LOG
-# Prestar atencion al mover archivos de no pisar otro con el mismo nombre.
-
-#PUNTO 8: Aceptar
-# Mover los archivos validos al directorio de aceptados
-# Prestar atencion al mover archivos de no pisar otro con el mismo nombre.
 
 	sleep $WAIT
 done
