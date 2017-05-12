@@ -224,8 +224,15 @@ function procesar_novedades() {
 }
 
 function invocar_validar_aceptados() {
-	./Start Validate &
-	MSG="Validate iniciado con id: $!"
+	./Start Validate
+	STATUS="$?"
+	if [ "$STATUS" -eq 10 ] 
+	then
+		MSG="Invocacion pospuesta para el siguiente ciclo"
+	else
+		PID="$(pidof -x Validate)"
+		MSG="Validate iniciado con id: $PID"
+	fi
 	logInfo "$MSG" 
 }
 
@@ -244,7 +251,7 @@ logInfo " "
 
 # 1s = 1 segundo
 # 1m = 1 minuto 
-WAIT=10s  
+WAIT=6s  
 
 LOOPS=0
 

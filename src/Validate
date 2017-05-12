@@ -1,5 +1,41 @@
 #!/bin/bash
-echo "Validate started"
+
+#PUNTO 1: La inicializacion del entorno la hace el Start
+
+#PUNTO 2: LOG
+function log() {
+	./Logger "Validate" "$1" "$2"
+}
+
+function logInfo() {
+	log "$1" "i"
+}
+
+function logAlert() {
+	log "$1" "a"
+}
+
+function logError() {
+	log "$1" "e"
+}
 
 
-echo "Validate ended"
+
+logInfo "Iniciando Validate"
+
+
+#PUNTO 3: Validar archivos (repetidos -ver PUNTO 7 -, consistencia de datos, etc)
+
+
+#PUNTO 4: Mover archivos rechazados y loguear el motivo
+
+
+#PUNTO 5 y 6: Crear archivo de salida
+
+
+#PUNTO 7: Bkp de archivos procesados (Calculo que se usan para validar los repetidos en el PUNTO 3)
+
+
+sleep 10
+
+logInfo "Validate ended"
