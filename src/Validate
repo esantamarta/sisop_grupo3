@@ -20,6 +20,67 @@ function logError() {
 }
 
 
+############## FUNCIONES PUNTOS 5,6 Y 7 ##############
+
+#Crear archivo de salida en base a los aceptados validos, y crear archivo de salida en procesados/proc
+function crear_archivos_salida() {
+
+	mkdir -p "$REPORTES"/transfer
+	ARR_ACEPTADOS=("$ACEPTADOS"/*)
+	for archivo in  "${ARR_ACEPTADOS[@]}"
+	do
+		test -f "$archivo" || continue
+		crear_archivo_salida "$archivo"
+	done
+}
+
+
+#Recibe un archivo de novedades y lo usa para armar la salida
+#Archivo de salida en directorio reportes/transfer
+#Mueve el archivo procesado a validados/proc
+function crear_archivo_salida() {
+	INPUT=$(basename "$1")
+	ARCHIVO="$1"
+
+	FUENTE=$(basename "$ARCHIVO")
+
+	logInfo "Procesando archivo $FUENTE"
+
+	ARCHIVO_MAESTROS=$(basename "$MAESTROS")
+	HEADER=true
+	while read -r linea
+	do
+
+		if [ $HEADER == true ]
+		then
+			HEADER=false
+			continue
+		fi
+
+		FECHA=$(cut -d';' -f1 <<< "$linea")
+		IMPORTE=$(cut -d';' -f2 <<< "$linea")
+		ESTADO=$(cut -d';' -f3 <<< "$linea")
+		CBU_ORIGEN=$(cut -d';' -f4 <<< "$linea")
+		CBU_DESTINO=$(cut -d';' -f5 <<< "$linea")
+		COD_ORIGEN=${CBU_ORIGEN:0:3}
+		COD_DESTINO=${CBU_DESTINO:0:3}
+		ENTIDAD_ORIGEN=$(grep "$COD_ORIGEN" "$MAESTROS"/"bamae.txt" | cut -d';' -f1)
+		ENTIDAD_DESTINO=$(grep "$COD_DESTINO" "$MAESTROS"/"bamae.txt" | cut -d';' -f1)
+
+		ARCHIVO_SALIDA="$REPORTES""/transfer/""$FECHA"".txt"
+
+		echo "$FUENTE"\;"$ENTIDAD_ORIGEN"\;"$COD_ORIGEN"\;"$ENTIDAD_DESTINO"\;"$COD_DESTINO"\;"$FECHA"\;"$IMPORTE"\;"$ESTADO"\;"$CBU_ORIGEN"\;"$CBU_DESTINO" >> "$ARCHIVO_SALIDA"
+		
+	done < "$ARCHIVO"
+
+	mv "$ARCHIVO" "$VALIDADOS""/proc"
+	logInfo "El archivo fue movido a $VALIDADOS""/proc"
+}
+
+
+############## FIN FUNCIONES PUNTOS 5,6 Y 7 ##############
+
+
 
 logInfo "Iniciando Validate"
 
@@ -29,13 +90,8 @@ logInfo "Iniciando Validate"
 
 #PUNTO 4: Mover archivos rechazados y loguear el motivo
 
+#PUNTOS 5, 6 y 7
+crear_archivos_salida
 
-#PUNTO 5 y 6: Crear archivo de salida
-
-
-#PUNTO 7: Bkp de archivos procesados (Calculo que se usan para validar los repetidos en el PUNTO 3)
-
-
-sleep 10
 
 logInfo "Validate ended"
