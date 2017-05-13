@@ -1,6 +1,14 @@
 use Switch;
 
+###REMOVER ini:
 $tranfer = "tranfer";
+$ENV{'DIRMAESTRO'} = "maestro";
+$ENV{'DIRREPORTES'} = "reportes";
+$reports = $ENV{'DIRREPORTES'};
+$balances = "balances";
+$lists = "listados";
+###REMOVER fin:
+
 
 #parametros validos para invocacion
 %parameters = 
@@ -14,6 +22,8 @@ $tranfer = "tranfer";
 #, "-rt" => 0
 , "-ri" => 0
 , "-cbu" => 0
+, "-sa" => 0
+, "-sao" => 0
 );
 
 #Toma los parametros tipo fecha que fueron ingresados
@@ -216,6 +226,24 @@ sub getParameters {
 				}
 				$parameters{"-cbu"} = 1;
 			}
+			case "-sa" {
+				if(defined($outputs)){
+					print "No pueden agregarse dos parámetros de salida diferentes\n";
+					exit;
+				}
+				$i++;
+				@outputs = ();
+				$parameters{"-sa"} = 1;
+			}
+			case "-sao" {
+				if(defined($outputs)){
+					print "No pueden agregarse dos parámetros de salida diferentes\n";
+					exit;
+				}
+				$i++;
+				@outputs = ();
+				$parameters{"-sao"} = 1;
+			}
 			else {
 				print "Parametro incorrecto!!\n";		
 			}
@@ -367,14 +395,15 @@ sub listByOriginEntity{
 		}
 	}	
 
-	printf("\n");
+	my @outputs = prepareOutputs("$lists");
+	for my $fh (@outputs) { printf $fh "\n"; };
 	foreach my $bank (keys(%report)) {
-		printf("Transferencias del banco %s hacia otras entidades bancarias\n", $bank);	
-		printf("\n");
-		printf("%-16s | %-15s | %-14s | Desde fecha: %-9s | Hasta Fecha: %-9s\n", "Banco Origen", $bank, "", $dateFrom, $dateTo);	
-		printf ('%1$s'x101 . "\n", "-");
-		printf("%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "ORIGEN", "DESTINO");	
-		printf ('%1$s'x101 . "\n", "-");
+		for my $fh (@outputs) { printf $fh "Transferencias del banco %s hacia otras entidades bancarias\n", $bank; };
+		for my $fh (@outputs) { printf $fh "\n"; };
+		for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | Desde fecha: %-9s | Hasta Fecha: %-9s\n", "Banco Origen", $bank, "", $dateFrom, $dateTo; };
+		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
+		for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "ORIGEN", "DESTINO"; };
+		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
 		
 		my $total = 0;
 
@@ -382,8 +411,8 @@ sub listByOriginEntity{
 			my $subtotal = 0;
 			for(my $i = 0; $i <= $#{$report{$bank}{$kdate}}; $i++){
 				if($showDetails){
-					printf("%16s | %15s | %-14s | %-22s | %-22s\n", $kdate, $report{$bank}{$kdate}[$i]{import}, $report{$bank}{$kdate}[$i]{state}, $report{$bank}{$kdate}[$i]{origin}, $report{$bank}{$kdate}[$i]{dest});	
-					printf ('%1$s'x101 . "\n", "-");	
+					for my $fh (@outputs) { printf $fh "%16s | %15s | %-14s | %-22s | %-22s\n", $kdate, $report{$bank}{$kdate}[$i]{import}, $report{$bank}{$kdate}[$i]{state}, $report{$bank}{$kdate}[$i]{origin}, $report{$bank}{$kdate}[$i]{dest}; };
+					for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
 				}
 				my $importSum = $report{$bank}{$kdate}[$i]{import};
 				$importSum =~ s/,/./;
@@ -393,18 +422,18 @@ sub listByOriginEntity{
 			my $day = $kdate;
 			$day =~ s/[0-9]{6,6}//;
 			
-			printf ('%1$s'x101 . "\n", "-");
-			printf("%-16s | %15.2f | %14s\n","subtotal día $day ", $subtotal);
-			printf ('%1$s'x101 . "\n", "-");
+			for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
+			for my $fh (@outputs) { printf $fh "%-16s | %15.2f | %14s\n","subtotal día $day ", $subtotal; };
+			for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
 
 			$total += $subtotal;
 		}
-		printf ('%1$s'x101 . "\n", "=");
-		printf("%-16s | %15.2f | %14s\n","total general ", $total);
-		printf ('%1$s'x101 . "\n", "=");
-
-		printf("\n");
+		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "="; };
+		for my $fh (@outputs) { printf $fh "%-16s | %15.2f | %14s\n","total general ", $total; };
+		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "="; };
+		for my $fh (@outputs) { printf $fh "\n"; };
 	}
+	closeOutputs(@outputs);
 }
 
 sub listByDestinationEntity{
@@ -449,14 +478,15 @@ sub listByDestinationEntity{
 		}
 	}	
 
-	printf("\n");
+	my @outputs = prepareOutputs("$lists");
+	for my $fh (@outputs) { printf $fh "\n"; };
 	foreach my $bank (keys(%report)) {
-		printf("Transferencias desde otras entidades hacia el banco %s \n", $bank);	
-		printf("\n");
-		printf("%-16s | %-15s | %-14s | Desde fecha: %-9s | Hasta Fecha: %-9s\n", "Banco Origen", $bank, "", $dateFrom, $dateTo);	
-		printf ('%1$s'x101 . "\n", "-");
-		printf("%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "ORIGEN", "DESTINO");	
-		printf ('%1$s'x101 . "\n", "-");
+		for my $fh (@outputs) { printf $fh "Transferencias desde otras entidades hacia el banco %s \n", $bank; }; 
+		for my $fh (@outputs) { printf $fh "\n"; }; 
+		for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | Desde fecha: %-9s | Hasta Fecha: %-9s\n", "Banco Origen", $bank, "", $dateFrom, $dateTo; }; 	
+		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; }; 
+		for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "ORIGEN", "DESTINO"; }; 
+		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; }; 
 		
 		my $total = 0;
 
@@ -464,8 +494,8 @@ sub listByDestinationEntity{
 			my $subtotal = 0;
 			for(my $i = 0; $i <= $#{$report{$bank}{$kdate}}; $i++){
 				if($showDetails){
-					printf("%16s | %15s | %-14s | %-22s | %-22s\n", $kdate, $report{$bank}{$kdate}[$i]{import}, $report{$bank}{$kdate}[$i]{state}, $report{$bank}{$kdate}[$i]{origin}, $report{$bank}{$kdate}[$i]{dest});	
-					printf ('%1$s'x101 . "\n", "-");	
+					for my $fh (@outputs) { printf $fh "%16s | %15s | %-14s | %-22s | %-22s\n", $kdate, $report{$bank}{$kdate}[$i]{import}, $report{$bank}{$kdate}[$i]{state}, $report{$bank}{$kdate}[$i]{origin}, $report{$bank}{$kdate}[$i]{dest}; }; 
+					for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; }; 
 				}
 				my $importSum = $report{$bank}{$kdate}[$i]{import};
 				$importSum =~ s/,/./;
@@ -475,18 +505,19 @@ sub listByDestinationEntity{
 			my $day = $kdate;
 			$day =~ s/[0-9]{6,6}//;
 			
-			printf ('%1$s'x101 . "\n", "-");
-			printf("%-16s | %15.2f | %14s\n","subtotal día $day ", $subtotal);
-			printf ('%1$s'x101 . "\n", "-");
+			for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; }; 
+			for my $fh (@outputs) { printf $fh "%-16s | %15.2f | %14s\n","subtotal día $day ", $subtotal; }; 
+			for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; }; 
 
 			$total += $subtotal;
 		}
-		printf ('%1$s'x101 . "\n", "=");
-		printf("%-16s | %15.2f | %14s\n","total general ", $total);
-		printf ('%1$s'x101 . "\n", "=");
+		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "="; }; 
+		for my $fh (@outputs) { printf $fh "%-16s | %15.2f | %14s\n","total general ", $total; }; 
+		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "="; }; 
 
-		printf("\n");
+		for my $fh (@outputs) { printf $fh "\n"; }; 
 	}
+	closeOutputs(@outputs);
 }
 
 sub listByCbu{
@@ -494,11 +525,12 @@ sub listByCbu{
 	print "$cbu\n";
 	@fileNames = sort(@fileNames); #ordeno los archivos por fecha para su tratamiento
 
-	printf("\n");
-	printf("Transferencias de la cuenta: %s\n", $cbu); #titulo
-	printf ('%1$s'x101 . "\n", "=");
-	printf("%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "DESDE", "HACIA");	
-	printf ('%1$s'x101 . "\n", "=");
+	my @outputs = prepareOutputs("$lists");
+	for my $fh (@outputs) { printf $fh "\n"; };
+	for my $fh (@outputs) { printf $fh "Transferencias de la cuenta: %s\n", $cbu; }; #titulo
+	for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "="; };
+	for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "DESDE", "HACIA"; };
+	for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "="; };
 
 	%totalControl = (debit => 0, credit => 0);
 	for($j = 0; $j <= $#fileNames; $j++){
@@ -522,16 +554,16 @@ sub listByCbu{
 						}else{
 							$subtotalControl{credit} += $importSum;									
 						}	
-						printf("%16s | %15s | %-14s | %22s | %22s\n",$date, $import, $state, $cbuOrigin, $cbuDest);
+						for my $fh (@outputs) { printf $fh "%16s | %15s | %-14s | %22s | %22s\n",$date, $import, $state, $cbuOrigin, $cbuDest; };
 					}
 				}
 			}
 
 			#Muestro el subtotal
 			$subtotal = $subtotalControl{credit} - $subtotalControl{debit};
-			printf ('%1$s'x101 . "\n", "-");
-			printf("%-16s | %15.2f | %14s | %22s | %22s\n","subtotal día $day ", $subtotal, $total, "para la cuenta", $cbu);
-			printf ('%1$s'x101 . "\n", "-");
+			for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
+			for my $fh (@outputs) { printf $fh "%-16s | %15.2f | %14s | %22s | %22s\n","subtotal día $day ", $subtotal, $total, "para la cuenta", $cbu; };
+			for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
 
 			$totalControl{debit} += $subtotalControl{debit};
 			$totalControl{credit} += $subtotalControl{credit};
@@ -543,26 +575,102 @@ sub listByCbu{
 	}else{
 		$resultadoBalance = "NEGATIVO";
 	}
-	printf ('%1$s'x101 . "\n", "-");
-	printf("%-16s | %15.2f | %14s | %22s | %22s\n","Balance $resultadoBalance", $total, "para la cuenta", $cbu);
-	printf ('%1$s'x101 . "\n", "=");
-	printf("\n");
+	for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
+	for my $fh (@outputs) { printf $fh "%-16s | %15.2f | %14s | %22s | %22s\n","Balance $resultadoBalance", $total, "para la cuenta", $cbu; };
+	for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "="; };
+	for my $fh (@outputs) { printf $fh "\n"; };
 }
 
 sub balanceByEntity{
+	my $showDetails = @_[0];
+	@fileNames = sort(@fileNames); #ordeno los archivos por fecha para su tratamiento
 	
-}
+	my $entity = @_[0];
+	my $entityCode = @_[1];
 
-sub balanceBetweenEntities{
-	$entity1 = @_[0];
-	$entity2 = @_[1];
-}
+	%balance = ( credit => 0, debit => 0);	
+	for($j = 0; $j <= $#fileNames; $j++){
+		openInputFile(@fileNames[$j]);
+		@lines = <INPUTFILE>;
+		close (INPUTFILE);
 
-sub rankingBetweenEntities{
+		if($#lines >= 0){
+			for($k = 0; $k <= $#lines; $k++){
+				if(splitLine(@lines[$k])){
+					if($origin ne $dest){
+						$importSum = $import;
+						$importSum =~ s/,/./;
+						if($origin eq $entity){
+							$balance{debit}+=$importSum;
+						}
+						if($dest eq $entity){
+							$balance{credit}+=$importSum;
+						}
+					}
+				}
+			}
+		}
+	}	
+
+	my @outputs = prepareOutputs("$balances");
+	for my $fh (@outputs) { printf $fh "\n"; }
+	for my $fh (@outputs) { printf $fh "Balance de la entidad %s \n", $entity; }
+	for my $fh (@outputs) { printf $fh "\n"; }
+	for my $fh (@outputs) { printf $fh '%1$s'x73 . "\n", "-"; }
+	for my $fh (@outputs) { printf $fh "%-30s | %-15.2f | %-21s \n", "Desde $entityCode", $balance{credit}, "hacia otras entidades"; }	
+	for my $fh (@outputs) { printf $fh "%-30s | %-15.2f | %-21s \n", "Hacia $entityCode", $balance{debit}, "desde otras entidades"; }
+	my $balanceResult = $balance{credit} - $balance{debit};
+	my $balanceResultState = "POSITIVO";
+	if($balanceResult < 0){
+		$balanceResultState = "NEGATIVO";
+	}
+	for my $fh (@outputs) { printf $fh '%1$s'x73 . "\n", "-"; }
+	for my $fh (@outputs) { printf $fh "%-30s | %-15s | %-21s \n", "Balance $balanceResultState para $entityCode", $balanceResult, ""; }
+	for my $fh (@outputs) { printf $fh '%1$s'x73 . "\n", "-"; }
+	
+	for my $fh (@outputs) { printf $fh "\n"; }
+	closeOutputs(@outputs);
 }
 
 sub openInputFile{
 	open(INPUTFILE,"<$tranfer/@_[0]") || die "Error";
+}
+
+#Genera un timestamp para darle como nombre al reporte de salida
+sub getLoggingTime {
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+    my $nice_timestamp = sprintf ( "%04d%02d%02d%02d%02d%02d",
+                                   $year+1900,$mon+1,$mday,$hour,$min,$sec);
+    return $nice_timestamp;
+}
+
+#Segun los parametros indicados por el usuario, retorna la lista de las salidas para el reporte.
+#Si no existen los directorios indicados, los intenta crear
+sub prepareOutputs{
+	use File::Path qw( make_path );
+	my $folder = "$reports/@_[0]";
+	my @outputs = ();
+	if($parameters{"-sa"} || $parameters{"-sao"}){
+		my $fileName = getLoggingTime();
+		if (!-d "$folder") {
+		    make_path $folder or die "Se ha producido un error creando el reporte: $folder. No se guardará el reporte en el archivo indicado.";
+		}
+		open(OUTPUTFILE,">$folder/$fileName.txt") || die "Error generando el archivo de salida. No se guardará el reporte en el archivo indicado.";
+		push(@outputs, OUTPUTFILE);
+		print "El reporte se guardará en el archivo: $fileName\n";
+	}
+	if($parameters{"-sao"} || !$parameters{"-sa"}){
+		push(@outputs, STDOUT);	
+	}
+	return @outputs;
+}
+
+sub closeOutputs{
+	foreach $output (@_){
+		if($output ne "STDOUT"){
+			close $output;
+		}
+	}
 }
 
 #Divide la linea en los valores de interes
@@ -656,5 +764,6 @@ showFileNames(); #Muestro los archivos fuente que fueron encontrados segun los f
 
 #listByCbu("0030032120005404458661");
 
-#listByDestinationEntity(0);
-balanceByEntity();
+#listByDestinationEntity(1);
+listByOriginEntity(0);
+#balanceByEntity("BAPRO", "003");
