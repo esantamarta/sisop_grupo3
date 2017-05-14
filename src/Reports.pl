@@ -770,9 +770,11 @@ sub isAValidLine{
 
 
 sub pedirFiltros{
-	while(1){
+	@filtros; # ejemplo, un string de la forma: -o galicia santander
+	$i = 0;
+	while( $filtro ne "x" ){
 		print "\t Filtros disponibles\n";
-		print "(-u) \t Fuente \n ";
+		print " (-u) \t Fuente \n ";
 		print "(-o) \t Entidad origen  \n ";
 		print "(-d) \t Entidad destino \n ";
 		print "(-e) \t Estado \n ";
@@ -783,16 +785,32 @@ sub pedirFiltros{
 		print "(-cbu) \t CBU \n ";
 		print "(x) \t Volver \n ";
 		$filtro = <STDIN>;
-		print $filtro;
 		chomp $filtro;
-		print $filtro;
-	}	
+		if ($filtro ne "x"){
+			@filtros[$i] = $filtro;
+			$i++;
+		}
+	}return @filtros;	
+}
+
+sub pedirOpListado{
+	print "\t Opciones de Listado \n";
+	print "\t Elija una opcion \n";
+	print " Default (Por pantalla) \n";
+	print "(-sa) \t Salida a archivo \n";
+	print "(-sao) \t Salida pantalla y archivo \n";
+	print "(x) \t Volver \n";
+	$opListado = <STDIN>;
+	chomp $opListado;
+	if ($opListado eq "-sa" || "-sao"){
+		return $opListado;
+	}
 }
 
 sub menu{
 	$option = "";
 	@filtros;
-	@opListado;
+	$opListado;
 	while( 1 ){
 		print "\tMenu de Reportes\t \n";
 		print "(1) \tListado por entidad origen\n";
@@ -806,14 +824,23 @@ sub menu{
 		switch($option){
 			case "1" { 
 				@filtros = pedirFiltros();
-				#@opListado = pedirOpcionesListado();
-				#Llamar a la funcion que da el listado por entidad origen, pasarle los 2 array 
+				$opListado = pedirOpListado();
+				#Llamar a la funcion que da el listado por entidad origen 
 			}
 			case "2" {
+				@filtros = pedirFiltros();
+				$opListado = pedirOpListado();
+				#Llamar a la funcion que da el listado por entidad destino
 			}
 			case "3" {
+				@filtros = pedirFiltros();
+				$opListado = pedirOpListado();
+				#Llamar a la funcion que da el balance por entidad
 			}
 			case "4" {
+				@filtros = pedirFiltros();
+				$opListado = pedirOpListado();
+				#Llamar a la funcion que da el listado por CBU
 			}
 			case "x" { 
 				exit;
@@ -826,20 +853,22 @@ sub menu{
 
 ##########INICIO DE EJECUCION##########
 
+menu();
+
 system 'clear'; #Limpio la pantalla
 
-getParameters(); #Otengo los parametros
+#getParameters(); #Otengo los parametros
 
-showParameters(); #Muestro los parametros
+#showParameters(); #Muestro los parametros
 
-getFileNames(); #Obtengo los archivos a utilizar
+#getFileNames(); #Obtengo los archivos a utilizar
 
-showFileNames(); #Muestro los archivos fuente que fueron encontrados segun los filtros
+#showFileNames(); #Muestro los archivos fuente que fueron encontrados segun los filtros
 
 #listByCbu("0030032120005404458661");
 
 
 #listByDestinationEntity(1);
-listByOriginEntity(0);
+#listByOriginEntity(0);
 #balanceByEntity("BAPRO", "003");
 
