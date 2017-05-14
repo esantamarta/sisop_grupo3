@@ -770,7 +770,7 @@ sub isAValidLine{
 
 
 sub pedirFiltros{
-	while($filtro not eq "x"){
+	while($filtro ne "x"){
 		print "\t Filtros disponibles\n";
 		print "(-u) \t Fuente \n ";
 		print "(-o) \t Entidad origen  \n ";
