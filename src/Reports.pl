@@ -768,11 +768,18 @@ sub isAValidLine{
 	return 1;
 }
 
+sub parser{ #devuelve el string que se le pasa por parametro como un vector. P.ej: "-u santander galicia -> (-u,santander,galicia)"
+	$string=@_[0];
+	@parametros = split(/\s/, $string);
+	return @parametros;
+}
 
 sub pedirFiltros{
 	@filtros; # ejemplo, un string de la forma: -o galicia santander
 	$i = 0;
-	while( $filtro ne "x" ){
+	$save = "a";
+	$exit = "x";
+	while( $filtro ne $save){
 		print "\t Filtros disponibles\n";
 		print " (-u) \t Fuente \n ";
 		print "(-o) \t Entidad origen  \n ";
@@ -783,13 +790,15 @@ sub pedirFiltros{
 		print "(-ri) \t Importe \n ";
 		print "(-eb) \t Entidad balance\n ";
 		print "(-cbu) \t CBU \n ";
-		print "(x) \t Volver \n ";
+		print "(a) \t Volver salvando filtros\n";
+		print " (x) \t Volver sin guardar \n ";
 		$filtro = <STDIN>;
 		chomp $filtro;
-		if ($filtro ne "x"){
+		if ($filtro ne $exit && $save){
 			@filtros[$i] = $filtro;
 			$i++;
-		}
+		}elsif ($filtro eq $exit){
+			return 0;}
 	}return @filtros;	
 }
 
