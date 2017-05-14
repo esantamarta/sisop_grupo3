@@ -780,6 +780,7 @@ sub pedirFiltros{
 	$save = "a";
 	$exit = "x";
 	while( $filtro ne $save){
+		system 'clear'; #Limpio la pantalla
 		print "\t Filtros disponibles\n";
 		print " (-u) \t Fuente \n ";
 		print "(-o) \t Entidad origen  \n ";
@@ -803,6 +804,7 @@ sub pedirFiltros{
 }
 
 sub pedirOpListado{
+	system 'clear'; #Limpio la pantalla
 	print "\t Opciones de Listado \n";
 	print "\t Elija una opcion \n";
 	print " Default (Por pantalla) \n";
@@ -816,11 +818,21 @@ sub pedirOpListado{
 	}
 }
 
+sub pedirDatos{
+	system 'clear'; #Limpio la pantalla
+	print "\t Ingrese los datos sobre los que quiere aplicar la accion \n";
+	$string_dato = <STDIN>;
+	chomp $string_dato;
+	@datos_array = parser($string_dato);
+	return @datos_array;
+}
+
 sub menu{
 	$option = "";
 	@filtros;
 	$opListado;
 	while( 1 ){
+		system 'clear'; #Limpio la pantalla
 		print "\tMenu de Reportes\t \n";
 		print "(1) \tListado por entidad origen\n";
 		print "(2) \tListado por entidad destino\n";
@@ -832,21 +844,26 @@ sub menu{
 
 		switch($option){
 			case "1" { 
+				@datos = pedirDatos();
 				@filtros = pedirFiltros();
 				$opListado = pedirOpListado();
+				
 				#Llamar a la funcion que da el listado por entidad origen 
 			}
 			case "2" {
+				@datos = pedirDatos();
 				@filtros = pedirFiltros();
 				$opListado = pedirOpListado();
 				#Llamar a la funcion que da el listado por entidad destino
 			}
 			case "3" {
+				@datos = pedirDatos();
 				@filtros = pedirFiltros();
 				$opListado = pedirOpListado();
 				#Llamar a la funcion que da el balance por entidad
 			}
 			case "4" {
+				@datos = pedirDatos();
 				@filtros = pedirFiltros();
 				$opListado = pedirOpListado();
 				#Llamar a la funcion que da el listado por CBU
