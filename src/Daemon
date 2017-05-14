@@ -154,7 +154,7 @@ function es_fecha_invalida() {
 		condicion=$(date -d "now" "+%s")
 		fecha=$(date -d "$fecha" "+%s")
 		diferencia=$(( ((condicion - fecha) / 86400) ))
-		if [ "$diferencia" -lt "15" ]
+		if [ "$diferencia" -lt "15" ] && [ "$diferencia" -gt "-1" ]
 		then
 			logInfo "La fecha del archivo $1 es valida"
 			return 1
