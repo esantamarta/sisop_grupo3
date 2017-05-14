@@ -118,7 +118,7 @@ sub getParameters {
 	for($i = 0; $i <= $#params; $i++){
 		switch(@params[$i]){
 			case "-f" { #Es filtro de fechas
-				if(defined(@dateParams) || defined(@rangeDateParams)){
+				if(defined($dateParams) || defined($rangeDateParams)){
 					print "No pueden agregarse dos parametros de fechas diferentes!\n";		
 					exit;
 				}
@@ -127,7 +127,7 @@ sub getParameters {
 				$parameters{"-f"} = 1;
 			}	
 			case "-u" { #Es filtro de fuentes
-				if(defined(@sourceParams)){
+				if(defined($sourceParams)){
 					print "No pueden agregarse dos parametros de fuentes diferentes!\n";		
 					exit;
 				}
@@ -136,7 +136,7 @@ sub getParameters {
 				$parameters{"-u"} = 1;
 			}
 			case "-o" { #Es filtro de origines
-				if(defined(@originParams)){
+				if(defined($originParams)){
 					print "No pueden agregarse dos parametros de banco origen diferentes!\n";		
 					exit;	
 				}
@@ -145,7 +145,7 @@ sub getParameters {
 				$parameters{"-o"} = 1;
 			}
 			case "-d" { #Es filtro de destinos
-				if(defined(@destParams)){
+				if(defined($destParams)){
 					print "No pueden agregarse dos parametros de banco destino diferentes!\n";		
 					exit;	
 				}
@@ -154,7 +154,7 @@ sub getParameters {
 				$parameters{"-d"} = 1;
 			}
 			case "-e" { #Es filtro de estados
-				if(defined(@stateParams)){
+				if(defined($stateParams)){
 					print "No pueden agregarse dos parametros de estados diferentes!\n";		
 					exit;
 				}
@@ -163,7 +163,7 @@ sub getParameters {
 				$parameters{"-e"} = 1;
 			}
 			case "-t" { #Es filtro de estados
-				if(defined(@transferParams) || defined(@rangeTransferParams)){
+				if(defined($transferParams) || defined($rangeTransferParams)){
 					print "No pueden agregarse dos parametros de fechas fecha de transferencia diferentes!\n";		
 					exit;	
 				}
@@ -172,7 +172,7 @@ sub getParameters {
 				$parameters{"-t"} = 1;
 			}
 			case "-rf" { #Es filtro de rango de fechas
-				if(defined(@dateParams) || defined(@rangeDateParams)){
+				if(defined($dateParams) || defined($rangeDateParams)){
 					print "No pueden agregarse dos parametros de fechas diferentes!\n";			
 				}
 				$i++; # me muevo a la sigueinte posicion
@@ -184,7 +184,7 @@ sub getParameters {
 				$parameters{"-rf"} = 1;
 			}
 			case "-rt" { #Es filtro de rango de fechas de transferencia
-				if(defined(@transferParams) || defined(@rangeTransferParams)){
+				if(defined($transferParams) || defined($rangeTransferParams)){
 					print "No pueden agregarse dos parametros de fecha de transferencia diferentes!\n";			
 				}
 				$i++; # me muevo a la sigueinte posicion
@@ -196,7 +196,7 @@ sub getParameters {
 				$parameters{"-rt"} = 1;
 			}
 			case "-ri" { #Es filtro de rango de importes
-				if(defined(@rangeImportParams)){
+				if(defined($rangeImportParams)){
 					print "No pueden agregarse dos parametros de importes diferentes!\n";		
 					exit;	
 				}
@@ -254,7 +254,7 @@ sub getParameters {
 sub showParameter{
 	@plist = @{$_[0]};
 	$pname = @_[1];
-	if(defined(@plist) && $#plist >= 0){
+	if(defined($plist) && $#plist >= 0){
 		print "\t$pname: ";
 		for(my $j = 0; $j <= $#plist; $j++){
 			print "@plist[$j] ";				
@@ -266,7 +266,7 @@ sub showParameter{
 sub showRangeParameter{	
 	@plist = @{$_[0]};
 	$pname = @_[1];
-	if(defined(@plist) && $#plist >= 0){
+	if(defined($plist) && $#plist >= 0){
 		print "\tRango de $pname: [@plist[0]; @plist[1]]\n";
 	}
 }
@@ -770,7 +770,7 @@ sub isAValidLine{
 
 
 sub pedirFiltros{
-	while($filtro ne "x"){
+	while(1){
 		print "\t Filtros disponibles\n";
 		print "(-u) \t Fuente \n ";
 		print "(-o) \t Entidad origen  \n ";
