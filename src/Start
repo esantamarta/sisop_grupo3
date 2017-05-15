@@ -31,7 +31,7 @@ PROCESS=$1
 function log() {
 
 	#touch $LOG/"Start.log"
-	./Logger "Start" "$1" "$2"
+	"$BINARIOS"/Logger "Start" "$1" "$2"
 
 }
 
@@ -65,7 +65,7 @@ validar_proceso_en_ejecucion "$PROCESS"
 #Ejecuta con & para independizar el proceso de la terminal
 #./Daemon &
 
-./"$PROCESS" &
+"$BINARIOS"/"$PROCESS" &
 
 log "Iniciado el proceso $1 con pid: $!" "i"
 
