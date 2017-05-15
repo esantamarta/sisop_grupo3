@@ -81,7 +81,7 @@ iniciar_daemon() {
 logMsg() {
 	echo "$1"
 	#$LOG/log "$COMMAND" "$1"
-	echo -e "$COMMAND | $1" >> "$LOG" 
+	echo -e "$COMMAND | $1" >> "$LOG\log.txt" 
 }
 
 
