@@ -615,15 +615,7 @@ sub showSourceFilters{
 			case "2"{
 				my $finalize = 0;
 				my @sources;
-				do{
-					@sources = &listSourcesToFilter();
-					if(@sources){
-						print("Filtros ingresados: @sources\n");
-						if(&validateYesOrNo("¿Desea continuar usando las fuentes ingresadas? S/N\n")){
-							return @sources;
-						}
-					}
-				}while (!@sources || $finalize); 
+				return &listSourcesToFilter();				
 			}
 			case "3"{
 				
@@ -659,7 +651,7 @@ sub listSourcesToFilter{
 	my $finalize = 0;
 
 	system clear;
-	printf "Ingrese las fuentes con el formato \"ddMMyyyy.txt\". Luego de cada fuente presione enter. Presione (f) para terminar la carga.\n";	
+	printf "Ingrese las fuentes con el formato \"yyyyMMdd.txt\". Luego de cada fuente presione enter. Presione (f) para terminar la carga.\n";	
 
 	do{
 		if(keys %selectedFonts){
@@ -681,8 +673,11 @@ sub listSourcesToFilter{
 						}
 					}
 				}else{
+					if(!&validateYesOrNo("¿Desea continuar cargando fuentes? S/N\n")){
+						return keys %selectedFonts;
+						$finalize = 1;
+					}
 					$isValidInput = 1;
-					$finalize = 1;
 				}				
 			}else{
 				if(!exists $fonts{$option}){
@@ -995,7 +990,7 @@ sub isAValidLine{
 sub listByOriginEntity{
 	my $showDetails = @_[0];
 	@fileNames = sort(@fileNames); #ordeno los archivos por fecha para su tratamiento
-	
+
 	my $dateFrom;
 	my $dateTo;
 	if($#fileNames < 0){
