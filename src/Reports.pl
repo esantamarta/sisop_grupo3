@@ -1,357 +1,995 @@
-use Switch;
 
-###REMOVER ini:
-$tranfer = "tranfer";
 $ENV{'DIRMAESTRO'} = "maestro";
 $ENV{'DIRREPORTES'} = "reportes";
-$reports = $ENV{'DIRREPORTES'};
-$balances = "balances";
-$lists = "listados";
-###REMOVER fin:
+$ENV{'DIRPROCESADOS'} = 'tranfer';
 
-#parametros validos para invocacion
-%parameters = 
-	("-f" => 0
-, "-rf" => 0
-, "-u"  => 0
-, "-o"  => 0
-, "-d"  => 0
-, "-e"  => 0
-#, "-t"  => 0
-#, "-rt" => 0
-, "-ri" => 0
-, "-cbu" => 0
-, "-sa" => 0
-, "-sao" => 0
-);
 
-#Toma los parametros tipo fecha que fueron ingresados
-sub getDateParams {
-	@dparams = ();
-	while( $i <= $#params && !exists($parameters{"@params[$i]"})){
-		if(@params[$i] =~ /[0-9]{8,8}/){
-			push(@dparams,@params[$i]);
+use Switch;
+
+my $option;
+system clear;
+&validateIfEnvironmentIsInit();
+&showReportList();
+
+
+sub showReportList{
+	system clear;
+	while ($option ne "x") {
+		printf "%16s", "Listado de Reportes:\n";
+		printf "%10s %16s", "(1)", "Listado por entidad origen\n";
+		printf "%10s %16s", "(2)", "Listado por entidad origen con detalles\n";
+		printf "%10s %16s", "(3)", "Listado por entidad destino\n";
+		printf "%10s %16s", "(4)", "Listado por entidad destino con detalles\n";
+		printf "%10s %16s", "(5)", "Balance por entidad\n";
+		printf "%10s %16s", "(6)", "Listado por CBU\n";
+		printf "%10s %5s", "(h)", "Ayuda\n";
+		printf "%10s %5s", "(x)", "Salir\n";
+
+		$option = &readFromConsole();
+		switch($option){
+			case "1"{
+				&showListByOriginEntityFilters();
+				&listByOriginEntity(0);
+				exit;
+			}
+			case "2"{
+				&showListByOriginEntityFilters();
+				&listByOriginEntity(1);
+				exit;
+			}
+			case "3"{
+				&showListByOriginEntityFilters();
+				&listByDestinationEntity(0);
+				exit;	
+			}
+			case "4"{
+				&showListByOriginEntityFilters();
+				&listByDestinationEntity(1);
+				exit;	
+			}
+			case "5"{
+				&showEntityBalanceFilters();
+				&balanceByEntity();
+				exit;
+			}
+			case "6"{
+				&showListByCbuFilters();
+				&listByCbu();
+				exit;	
+			}
+			case "h"{
+				&showHelp();
+				&showReportList();
+			}
+			case "x"{
+				exit;
+			}
+			else{
+				&showInvalidOption($option);
+			}
+		}
+
+	}
+}
+
+sub showHelpMenu{
+	printf "%16s", "Menú de ayuda:\n";
+	printf "%10s %16s", "(1)", "Listado por entidad origen\n";
+	printf "%10s %16s", "(2)", "Listado por entidad origen con detalles\n";
+	printf "%10s %16s", "(3)", "Listado por entidad destino\n";
+	printf "%10s %16s", "(4)", "Listado por entidad destino con detalles\n";
+	printf "%10s %16s", "(5)", "Balance por entidad\n";
+	printf "%10s %16s", "(6)", "Listado por CBU\n";
+	printf "%10s %5s", "(x)", "Volver al menú principal\n";
+}
+
+sub closeHelp{
+	my $option;
+	while (1) {
+		$option = &readFromConsole();
+		if($option eq "b"){
+			&showHelp();
+		}
+		if($option eq "x"){
+			&showReportList();
+		}
+	}
+}
+
+sub showHelp{
+	my $option;
+	system clear;
+	do{
+		showHelpMenu();		
+		$option = &readFromConsole();
+		switch($option){
+			case "1"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por entidad origen\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Lista el importe total de las transferencias emitidas por un banco que cumplen con los parámetros \n");
+				print("de invocación.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n"); 
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "2"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por entidad origen\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Lista las transferencias emitidas por un banco que cumplen con los parámetros de invocación.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "3"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por entidad origen\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Lista el importe total de las transferencias recibidas por un banco que cumplen con los parámetros\n");
+				print("de invocación.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "4"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por entidad origen\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Lista las transferencias recibidas por un banco que cumplen con los parámetros de invocación.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();	
+			}
+			case "5"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Balance por entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Listar todas las transferencias recibidas y emitidas para una entidad e indica si el resultado fue\n");
+				print("positivo o negativo.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad: entidad sobre la que se quiere realizar el balance\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");				
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "6"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por CBU\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Listar las transferencias recibidas / emitidas por una determinada CBU que cumplen con los parámetros\n");
+				print("de invocación.\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "CBU: número de CBU sobre el que se quiere realizar el reporte\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "x"{
+				&showReportList();
+			}
+			else{
+				&showInvalidOption($option);
+			}
+		}
+	}while($option ne "x");
+}
+
+sub validateIfEnvironmentIsInit{
+	if(!defined $ENV{'DIRMAESTRO'} || !defined $ENV{'DIRREPORTES' ||!defined $ENV{'DIRPROCESADOS'}}){
+		print "El ambiente no se encuentra inicializado. Por favor ejecute el comando Init\n";
+		exit;
+	}
+	$masters = $ENV{'DIRMAESTRO'};
+	$reports = $ENV{'DIRREPORTES'};
+	$tranfer = $ENV{'DIRPROCESADOS'};
+	$balances = "balances";
+	$lists = "listados";
+}
+
+sub showInvalidOption{
+	print "La opción: @_[0] no es válida\n";
+}
+
+sub showListByOriginEntityFilters{
+	@originParams = &showOriginEntitiesFilters();
+	@destParams = &showDestiniEntitiesFilters();
+	@rangeImportParams = &showImportFilters();
+	@stateParams = &showStateFilters();
+	@fileNames = &showSourceFilters();
+	%outputParams = &showOutputOptions();
+
+	print ("\n");
+	print ("\n");
+	print ("Se utilizaron los siguientes filtros:");
+	print ("\n");
+	if(@originParams){
+		print "Entidades origen: @originParams\n";
+	}
+	if(@destParams){
+		print "Entidades destino: @destParams\n";
+	}
+	if(@rangeImportParams){
+		print "Importes desde @rangeImportParams[0] hasta @rangeImportParams[0]\n";
+	}
+	if(@stateParams){
+		print "Estados: @stateParams\n";
+	}
+	if(@fileNames){
+		print "Fuentes: @fileNames\n";
+	}
+	if(%outputParams){
+		if(exists $outputParams{"p"}){
+			print "El reporte se mostrara por pantalla\n";
+		}elsif(exists $outputParams{"sa"}){
+			print "El reporte se guardará en un archivo\n";
 		}else{
-			print "@params[$i] no es una fecha valida!!\n";
-			exit;
+			print "El reporte se mostrara por pantalla y se guardará en un archivo\n";
 		}
-		$i++;
-	}	
-	if ($#dparams >= 0){ #Si tengo parametros de fecha => voy a quedar desfasado en el ciclo desfasado y tengo que volver atras
-		$i--;	
 	}
-	return @dparams;
 }
 
-#Toma los parametros tipo importe que fueron ingresados
-sub getImportParams {
-	@iparams = ();
-	while( $i <= $#params && !exists($parameters{"@params[$i]"})){
-		if(@params[$i] =~ /[0-9]*,?[0-9]{2}/){
-			push(@iparams,@params[$i]);
+sub showEntityBalanceFilters{
+	%entityParam = &showBalanceEntityFilters();
+	@rangeImportParams = &showImportFilters();
+	@stateParams = &showStateFilters();
+	@fileNames = &showSourceFilters();
+	%outputParams = &showOutputOptions();
+
+	print ("\n");
+	print ("\n");
+	print ("Se utilizaron los siguientes filtros:");
+	print ("\n");
+
+	if(@originParams){
+		print "Entidades origen: @originParams\n";
+	}
+	if(@destParams){
+		print "Entidades destino: @destParams\n";
+	}
+	if(@rangeImportParams){
+		print "Importes desde @rangeImportParams[0] hasta @rangeImportParams[1]\n";
+	}
+	if(@stateParams){
+		print "Estados: @stateParams\n";
+	}
+	if(@fileNames){
+		print "Fuentes: @fileNames\n";
+	}
+	if(%outputParams){
+		if(exists $outputParams{"p"}){
+			print "El reporte se mostrara por pantalla\n";
+		}elsif(exists $outputParams{"sa"}){
+			print "El reporte se guardará en un archivo\n";
 		}else{
-			print "@params[$i] no es un importe valido!!\n"; 	
-			exit;
-		}
-		$i++;
-	}	
-	if ($#iparams >= 0){ #Si tengo parametros de importe => voy a quedar desfasado en el ciclo desfasado y tengo que volver atras
-		$i--;	
-	}
-	return @iparams;
-}
-
-#Toma los parametros de estado que fueron ingresados
-sub getStateParams {
-	@eparams = ();
-	while( $i <= $#params && !exists($parameters{"@params[$i]"})){ 
-		if(@params[$i] eq "Pendiente" || @params[$i] eq "Anulada"){
-			push(@eparams,@params[$i]);
-		}
-		else{
-			print "@params[$i] no es un estado valido!!\n";
-			exit;
-		}
-		$i++;
-	}	
-	if ($#eparams >= 0){ #Si tengo parametros de estado => voy a quedar desfasado en el ciclo desfasado y tengo que volver atras
-		$i--;	
-	}
-	return @eparams;
-}
-
-#Toma los parametros de fuente que fueron ingresados
-sub getSourceParams {
-	@eparams = ();
-	while( $i <= $#params && !exists($parameters{"@params[$i]"})){
-		if(@params[$i] =~ /[0-9]{8,8}.txt/){
-			push(@eparams,@params[$i]);
-		}
-		else{
-			print "@params[$i] no es un nombre de archivo fuente valido!!\n";
-			exit;
-		}
-		$i++;
-	}	
-	if ($#eparams >= 0){ #Si tengo parametros de estado => voy a quedar desfasado en el ciclo desfasado y tengo que volver atras
-		$i--;	
-	}
-	return @eparams;
-}
-
-#Toma los parametros de origen y destino que fueron ingresados
-sub getBanksParams {
-	@eparams = ();
-	while( $i <= $#params && !exists($parameters{"@params[$i]"})){
-		push(@eparams,@params[$i]);
-		$i++;
-	}	
-	if ($#eparams >= 0){ #Si tengo parametros de estado => voy a quedar desfasado en el ciclo desfasado y tengo que volver atras
-		$i--;	
-	}
-	return @eparams;
-}
-
-sub getParameters {
-	@params = @ARGV;
-
-	for($i = 0; $i <= $#params; $i++){
-		switch(@params[$i]){
-			case "-f" { #Es filtro de fechas
-				if(defined($dateParams) || defined($rangeDateParams)){
-					print "No pueden agregarse dos parametros de fechas diferentes!\n";		
-					exit;
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@dateParams = getDateParams();		
-				$parameters{"-f"} = 1;
-			}	
-			case "-u" { #Es filtro de fuentes
-				if(defined($sourceParams)){
-					print "No pueden agregarse dos parametros de fuentes diferentes!\n";		
-					exit;
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@sourceParams = getSourceParams();	
-				$parameters{"-u"} = 1;
-			}
-			case "-o" { #Es filtro de origines
-				if(defined($originParams)){
-					print "No pueden agregarse dos parametros de banco origen diferentes!\n";		
-					exit;	
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@originParams = getBanksParams();		
-				$parameters{"-o"} = 1;
-			}
-			case "-d" { #Es filtro de destinos
-				if(defined($destParams)){
-					print "No pueden agregarse dos parametros de banco destino diferentes!\n";		
-					exit;	
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@destParams = getBanksParams();		
-				$parameters{"-d"} = 1;
-			}
-			case "-e" { #Es filtro de estados
-				if(defined($stateParams)){
-					print "No pueden agregarse dos parametros de estados diferentes!\n";		
-					exit;
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@stateParams = getStateParams();		
-				$parameters{"-e"} = 1;
-			}
-			case "-t" { #Es filtro de estados
-				if(defined($transferParams) || defined($rangeTransferParams)){
-					print "No pueden agregarse dos parametros de fechas fecha de transferencia diferentes!\n";		
-					exit;	
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@transferParams = getDateParams();		
-				$parameters{"-t"} = 1;
-			}
-			case "-rf" { #Es filtro de rango de fechas
-				if(defined($dateParams) || defined($rangeDateParams)){
-					print "No pueden agregarse dos parametros de fechas diferentes!\n";			
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@rangeDateParams = getDateParams();		
-				if($#rangeDateParams != 1){
-					print "No se ingreso un rango de fechas valido\n";
-					exit;
-				}
-				$parameters{"-rf"} = 1;
-			}
-			case "-rt" { #Es filtro de rango de fechas de transferencia
-				if(defined($transferParams) || defined($rangeTransferParams)){
-					print "No pueden agregarse dos parametros de fecha de transferencia diferentes!\n";			
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@rangeTransferParams = getDateParams();		
-				if($#rangeTransferParams != 1){
-					print "No se ingreso un rango de fechas de transferencia valido\n";
-					exit;			
-				}
-				$parameters{"-rt"} = 1;
-			}
-			case "-ri" { #Es filtro de rango de importes
-				if(defined($rangeImportParams)){
-					print "No pueden agregarse dos parametros de importes diferentes!\n";		
-					exit;	
-				}
-				$i++; # me muevo a la sigueinte posicion
-				@rangeImportParams = getImportParams();
-				if($#rangeImportParams != 1){
-					print "No se ingreso un rango de importes valido\n";
-					exit;			
-				}
-				$parameters{"-ri"} = 1;
-			}
-			case "-cbu" { #Es filtro de rango de importes
-				if(defined($cbuParam)){
-					print "No pueden agregarse dos parametros de cbu diferentes!\n";		
-					exit;	
-				}
-				$i++; # me muevo a la sigueinte posicion
-				if($i > $#ARGV){
-					print "Debe ingresarse un número de cbu\n";
-					exit;			
-				}
-				$cbuParam = @ARGV[$i];
-				if(length($cbuParam) < 22){
-					print "El número de cbu debe tener 22 dígitos\n";
-					exit;				
-				}
-				$parameters{"-cbu"} = 1;
-			}
-
-			case "-sa" {
-				if(defined($outputs)){
-					print "No pueden agregarse dos parámetros de salida diferentes\n";
-					exit;
-				}
-				$i++;
-				@outputs = ();
-				$parameters{"-sa"} = 1;
-			}
-			case "-sao" {
-				if(defined($outputs)){
-					print "No pueden agregarse dos parámetros de salida diferentes\n";
-					exit;
-				}
-				$i++;
-				@outputs = ();
-				$parameters{"-sao"} = 1;
-			}
-
-			else {
-				print "Parametro incorrecto!!\n";		
-			}
+			print "El reporte se mostrara por pantalla y se guardará en un archivo\n";
 		}
 	}
 }
-sub showParameter{
-	@plist = @{$_[0]};
-	$pname = @_[1];
-	if(defined($plist) && $#plist >= 0){
-		print "\t$pname: ";
-		for(my $j = 0; $j <= $#plist; $j++){
-			print "@plist[$j] ";				
+
+sub showListByCbuFilters{
+	$cbuParam = &showCbuFilters();
+	@originParams = &showOriginEntitiesFilters();
+	@destParams = &showDestiniEntitiesFilters();
+	@rangeImportParams = &showImportFilters();
+	@stateParams = &showStateFilters();
+	@fileNames = &showSourceFilters();
+	%outputParams = &showOutputOptions();
+
+	print ("\n");
+	print ("\n");
+	print ("Se utilizaron los siguientes filtros:");
+	print ("\n");
+
+	if($cbuParam){
+		print "CBU: $cbuParam\n";
+	}
+	if(@originParams){
+		print "Entidades origen: @originParams\n";
+	}
+	if(@destParams){
+		print "Entidades destino: @destParams\n";
+	}
+	if(@rangeImportParams){
+		print "Importes desde @rangeImportParams[0] hasta @rangeImportParams[1]\n";
+	}
+	if(@stateParams){
+		print "Estados: @stateParams\n";
+	}
+	if(@fileNames){
+		print "Fuentes: @fileNames\n";
+	}
+	if(%outputParams){
+		if(exists $outputParams{"p"}){
+			print "El reporte se mostrara por pantalla\n";
+		}elsif(exists $outputParams{"sa"}){
+			print "El reporte se guardará en un archivo\n";
+		}else{
+			print "El reporte se mostrara por pantalla y se guardará en un archivo\n";
 		}
-		print "\n";
 	}
 }
 
-sub showRangeParameter{	
-	@plist = @{$_[0]};
-	$pname = @_[1];
-	if(defined($plist) && $#plist >= 0){
-		print "\tRango de $pname: [@plist[0]; @plist[1]]\n";
+sub showOriginEntitiesFilters{
+	if(&validateYesOrNo("¿Desea filtrar por Entidad Origen? S/N\n")){
+		printf "%10s %16s", "(1)", "Todas las entidades\n";
+		printf "%10s %16s", "(2)", "Seleccionar entidades\n";
+		printf "%10s %16s", "(3)", "Ir al siguiente filtro\n";
+
+		my $option = &readFromConsole();
+		switch($option){
+			case "1"{
+				if(&validateYesOrNo("¿Desea seleccionar todas las entidades origen de las cuales se tenga información? S/N\n")){
+					return &getAllEntities();
+				}
+			}
+			case "2"{
+				my $finalize = 0;
+				my @entities;
+				do{
+					@entities = &listEntitiesToFilter();
+					if(!@entities){
+						if(&validateYesOrNo("No ha ingresado filtros. Si no selecciona entidades origen no se generará el reporte. ¿Desea volver al listado de reportes? S/N\n")){
+							&showReportList();
+						}
+					}else{
+						return @entities;
+					}
+				}while (!@entities || $finalize); 
+			}
+			case "3"{
+				
+			}
+			else{
+				&showInvalidOption($option);
+			}
+		}
+	}else{
+		return &getAllEntities();
 	}
 }
 
-sub showParameters{
-	print "Se utilizarán los siguientes filtros:\n";
-	showParameter(\@dateParams, "fechas de transacción");
-	showParameter(\@sourceParams, "fuentes");
-	showParameter(\@originParams, "origenes");
-	showParameter(\@destParams, "destinos");
-	showParameter(\@statesParams, "estados");
-	showParameter(\@transferParams, "fechas de transferencia");
-	showRangeParameter(\@rangeDateParams, "fechas de transacción");
-	showRangeParameter(\@rangeTransferParams, "fechas de transferencia");
-	showRangeParameter(\@rangeImportParams, "importes");
+sub showDestiniEntitiesFilters{
+	if(&validateYesOrNo("¿Desea filtrar por Entidad Destino? S/N\n")){
+		printf "%10s %16s", "(1)", "Todas las entidades\n";
+		printf "%10s %16s", "(2)", "Seleccionar entidades\n";
+		printf "%10s %16s", "(3)", "Ir al siguiente filtro\n";
+
+		my $option = &readFromConsole();
+		switch($option){
+			case "1"{
+				if(&validateYesOrNo("¿Desea seleccionar todas las entidades destino de las cuales se tenga información? S/N\n")){
+					return &getAllEntities();
+				}
+			}
+			case "2"{
+				my $finalize = 0;
+				my @entities;
+				do{
+					@entities = &listEntitiesToFilter();
+					if(!@entities){
+						if(&validateYesOrNo("No ha ingresado filtros. Si no selecciona entidades destino no se generará el reporte. ¿Desea volver al listado de reportes? S/N\n")){
+							&showReportList();
+						}
+					}else{
+						return @entities;
+					}
+				}while (!@entities || $finalize); 
+			}
+			case "3"{
+				
+			}
+			else{
+				&showInvalidOption($option);
+			}
+		}
+	}else{
+		return &getAllEntities();
+	}
+}
+
+sub showBalanceEntityFilters{
+	my $selectedEntity;
+	my $finalize = 0;
+	open(INPUTFILE,"<$masters/bamae.txt") || die "Error abriendo el archivo de maestros\n";
+	@lines = <INPUTFILE>;
+	close (INPUTFILE);
+	while(!$finalize){
+		system clear;
+		print("Seleccione la entidad para la cual desea generar el balance\n");
+		print("Ingrese el número correspondiente al banco deseado seguido de la tecla enter. Para cancelar presione (f)\n");
+		
+		for(my $i = 0; $i <= $#lines; $i++){
+			my ($abr, $code, $name) = split(";", @lines[$i]);
+			printf "%10s (%s) %s", "", "$i", "$abr\n";
+		}
+		printf "%10s (%s) %s", "", "f", "Cancelar\n";
+
+		my $invalidOption = 1;
+		do{
+			my $option = &readFromConsole();
+			my $optionCount = ($#lines + 1);
+			if(&isANumber($option) && &toNumber($option) <= $optionCount && &toNumber($option) >= 0){
+				my ($abr, $code, $name) = split(";", @lines[$option]);
+				print "$abr\n";
+				return ("abr" => $abr, "code" => $code);				
+			}elsif ($option eq "f" || $option eq "F"){
+				$finalize = 1;
+				$invalidOption = 0;
+			}else{
+				&showInvalidOption($option);
+			}
+		}while ($invalidOption);
+	}
+	return $selectedEntity;
+}
+
+sub showImportFilters{
+	if(&validateYesOrNo("¿Desea filtrar por rango de Importes? S/N\n")){
+		my $finalize = 0;
+		my $minValue;
+		my $maxValue;
+		my $finalizeMinCharge = 0;
+		my $finalizeMaxCharge = 0;
+		while (!$finalize){
+			print("Ingrese el rango de importes por el cual desea filtrar. Presione (f) si desea salir.\n");
+			while (!$finalizeMinCharge && !$finalize){
+				print("Ingrese el mínimo importe:\n");
+				$minValue = &readPositiveNumberFromConsole("f");
+				if($minValue eq "f"){
+					if(&validateYesOrNo("¿Desea abandonar la carga del filtro de Importes? S/N\n")){
+						$finalize = 1;
+					}
+				}
+				if(&isANumber($minValue)){
+					$finalizeMinCharge = 1;
+				}
+			};
+
+			while (!$finalizeMaxCharge && !$finalize){
+				print("Ingrese el máximo importe:\n");
+				$maxValue = &readPositiveNumberFromConsole("f");
+				if($maxValue eq "f"){
+					if(&validateYesOrNo("¿Desea abandonar la carga del filtro de Importes? S/N\n")){
+						$finalize = 1;
+					}
+				}
+				if(&isANumber($maxValue)){
+					if(&toNumber($minValue) > &toNumber($maxValue)){
+						print "El valor mínimo: $minValue ingresado es mayor al máximo: $maxValue\n";
+					}else{
+						$finalize = 1;
+					}
+				}
+				if(&isANumber($maxValue)){
+					$finalizeMaxCharge = 1;
+				}
+			};
+		};
+		if($finalizeMinCharge && $finalizeMaxCharge){
+			return ($minValue, $maxValue);
+		}
+		return ();
+	}else{
+		return ();
+	}
+}
+
+sub showStateFilters{
+	if(&validateYesOrNo("¿Desea filtrar por Estados? S/N\n")){
+		do{
+			system clear;
+			printf "%10s %9s", "(1)", "Anuladas\n";
+			printf "%10s %10s", "(2)", "Pendientes\n";
+			printf "%10s %10s", "(3)", "Anuladas y Pendientes\n";
+			printf "%10s %10s", "(4)", "Ir al siguiente filtro\n";
+
+			my $option = &readFromConsole();
+			switch($option){
+				case "1"{
+					return ("Anulada");
+				}
+				case "2"{
+					return ("Pendiente");
+				}
+				case "3"{
+					return ("Anulada", "Pendiente");
+				}
+				case "4"{
+					return 0;
+				}
+				else{
+					&showInvalidOption($option);
+				}
+			}
+		}while ();
+	}else{
+		return ("Anulada", "Pendiente");
+	}
+}
+
+sub showSourceFilters{
+	if(&validateYesOrNo("¿Desea filtrar por Fuente? S/N\n")){
+		printf "%10s %16s", "(1)", "Todas las fuentes\n";
+		printf "%10s %16s", "(2)", "Seleccionar fuentes\n";
+		printf "%10s %16s", "(3)", "Ir al siguiente filtro\n";
+
+		my $option = &readFromConsole();
+		switch($option){
+			case "1"{
+				if(&validateYesOrNo("¿Desea seleccionar todas las fuentes existentes? S/N\n")){
+					return &getAllFileNames();
+				}else{
+					return &showSourceFilters();
+				}
+			}
+			case "2"{
+				my $finalize = 0;
+				my @sources;
+				do{
+					@sources = &listSourcesToFilter();
+					if(@sources){
+						print("Filtros ingresados: @sources\n");
+						if(&validateYesOrNo("¿Desea continuar usando las fuentes ingresadas? S/N\n")){
+							return @sources;
+						}
+					}
+				}while (!@sources || $finalize); 
+			}
+			case "3"{
+				
+			}
+			else{
+				&showInvalidOption($option);
+			}
+		}
+	}else{
+		return &getAllFileNames();
+	}
+}
+
+sub showCbuFilters{
+	system clear;
+	do{		
+		print "Ingrese el número de CBU para filtrar seguido de la tecla enter para terminar la carga. Presione (f) si desea cancelar\n";
+		my $cbuNumber = &readFromConsole();
+		if($cbuNumber eq "f"){
+			if(&validateYesOrNo("El filtro por cbu es obligatorio para este reporte, ¿Desea cancelar la generación? S/N\n")){
+				&showReportList();
+			}
+		}elsif($cbuNumber =~ /[0-9]{22,22}/){
+			return $cbuNumber;
+		}else{
+			print "El formato del CBU es incorrecto, el mismo consta de 22 dígitos\n";
+		}
+	}while (1);
+}
+	
+sub listSourcesToFilter{
+	my %selectedFonts;
+	my $finalize = 0;
+
+	system clear;
+	printf "Ingrese las fuentes con el formato \"ddMMyyyy.txt\". Luego de cada fuente presione enter. Presione (f) para terminar la carga.\n";	
+
+	do{
+		if(keys %selectedFonts){
+			print("Fuentes ingresadas: ");
+			print "$_ " for (keys %selectedFonts);
+			print "\n";
+		}
+
+		my $isValidInput = 0;
+		do{
+			my $option = &readFromConsole();
+			if($option eq "f"){
+				if(!keys %selectedFonts){
+					if(&validateYesOrNo("No ha ingresado fuentes. ¿Desea filtrar usando todas las fuentes? S/N\n")){
+						return &getAllFileNames();
+					}else{
+						if(&validateYesOrNo("No puede generar un reporte sin fuentes. ¿Desea ir al listado de reportes? S/N\n")){
+							&showReportList();
+						}
+					}
+				}else{
+					$isValidInput = 1;
+					$finalize = 1;
+				}				
+			}else{
+				if(!exists $fonts{$option}){
+					if(&existsSourceFile($option)){
+						$selectedFonts{$option} = 1;
+						$isValidInput = 1;
+					}else{
+						print "No existe el archivo fuente $option\n";
+						$isValidInput = 0;
+					}
+				}else{
+					print "La fuente ya ha sido ingresada\n";
+					$isValidInput = 0;
+				}		
+			}
+		}while (!$isValidInput);
+	}while (!$finalize);
+	return keys %selectedFonts;
+}
+
+sub showOutputOptions{
+	my %outputOptions;
+	do{
+		system clear;
+		print "Seleccione el modo en que desea que se muestre el reporte\n";
+		printf "%10s %9s", "(1)", "Salida por Pantalla\n";
+		printf "%10s %10s", "(2)", "Salida a Archivo\n";
+		printf "%10s %10s", "(3)", "Salida por Pantalla y a Archivo\n";
+		printf "%10s %8s", "(4)", "Cancelar reporte\n";
+
+		my $option = &readFromConsole();
+		switch($option){
+			case "1"{
+					$outputOptions{"p"} = 1;
+				}
+				case "2"{
+					$outputOptions{"sa"} = 1;
+				}
+				case "3"{
+					$outputOptions{"sao"} = 1;
+				}
+				case "4"{
+					if(&validateYesOrNo("¿Quiere cancelar la generación del reporte? S/N\n")){
+						&showReportList();
+					}
+				}
+				else{
+					&showInvalidOption($option);
+				}
+			}
+		}while ();
+	return %outputOptions;
+}
+
+sub readPositiveNumberFromConsole{
+	my $scapeInput = @_[0];
+	my $finalize = 0;
+	do{
+		my $input = &readFromConsole();
+		if($scapeInput eq $input){
+			return $scapeInput;
+		}
+		if(&isANumber($input)){
+			return toNumber($input);
+		}
+		if(!&isANumber($input)){
+			print("El valor ingresado no es un número\n");
+		}elsif(toNumber($input) < 0){
+			print("El valor debe ser un numero positivo\n");
+		}else{
+			$finalize = 1;
+		}
+	}while (!$finalize);
+}
+
+sub validateYesOrNo{
+	do{
+		print(@_[0]);
+		my $option = <STDIN>;
+		chomp($option);
+		if($option eq "S" || $option eq "s"){
+			return 1;
+		}elsif ($option eq "N" || $option eq "n"){
+			return 0;
+		}else{
+			&showInvalidOption($option);	
+		}
+	}while(1);
+}
+
+sub getAllEntities{
+	open(INPUTFILE,"<$masters/bamae.txt") || die "Error abriendo el archivo de maestros\n";
+	@lines = <INPUTFILE>;
+	close (INPUTFILE);
+	my @entities;
+	for(my $i = 0; $i <= $#lines; $i++){
+		my ($abr, $code, $name) = split(";", @lines[$i]);
+		push(@entities, $abr);
+	}
+	return @entities;
+}
+
+sub listEntitiesToFilter{
+	my %selectedEntities;
+	my $finalize = 0;
+	open(INPUTFILE,"<$masters/bamae.txt") || die "Error abriendo el archivo de maestros\n";
+	@lines = <INPUTFILE>;
+	close (INPUTFILE);
+	while(!$finalize){
+		system clear;
+
+		if(keys %selectedEntities){
+			print("Filtros ingresados: ");
+			print "$_ " for (keys %selectedEntities);
+			print "\n";
+		}
+		print("Ingrese el número correspondiente al banco deseado seguido de la tecla enter para terminar la carga, presione (f)\n");
+		for(my $i = 0; $i <= $#lines; $i++){
+			my ($abr, $code, $name) = split(";", @lines[$i]);
+
+			if(!exists $selectedEntities{$abr}){
+				printf "%10s (%s) %s", "", "$i", "$abr\n";
+			}
+		}
+		printf "%10s (%s) %s", "", "f", "Terminar la carga\n";
+
+		my $invalidOption = 1;
+		do{
+			my $option = &readFromConsole();
+			my $optionCount = ($#lines + 1);
+			if(&isANumber($option) && &toNumber($option) <= $optionCount && &toNumber($option) >= 0){
+				my ($abr, $code, $name) = split(";", @lines[$option]);
+				$selectedEntities{$abr} = 1;
+				$invalidOption = 0;
+			}elsif ($option eq "f" || $option eq "F"){
+				my @entities = keys %selectedEntities;
+				print("Filtros ingresados: @entities\n");
+				if(&validateYesOrNo("¿Desea finalizar la carga de entidades? S/N\n")){
+					$finalize = 1;
+				}
+				$invalidOption = 0;	
+			}else{
+				&showInvalidOption($option);
+			}
+		}while ($invalidOption);
+	}
+	return keys %selectedEntities;
+}
+
+
+sub readFromConsole{
+	my $option = <STDIN>;
+	chomp $option;
+	return $option;
+}
+
+sub isANumber{
+	my $value = @_[0];
+	if( $value eq $value+0 ){
+	  return 1;
+	}
+	return 0;
+}
+
+sub toNumber{
+	my $value = @_[0];
+	return $value+0;
 }
 
 #Retorna el nombre de todos los archivos de trabajo
 sub getAllFileNames{
-	while( $filename = readdir(DIRTRANS) ){
-		if( $filename =~ /[0-9]{8,8}.txt/ ){ ##Recupero solo los archivos tipo txt
-			push(@fileNames, "$filename");	
-		}
-	}		
-}
+	my @fileNames;
 
-#Retorna el nombre de todos los archivos que se correspondan con un rango de fechas
-sub getFileNamesByRange{
-	$dateFrom = @rangeDateParams[0];
-	$dateTo = @rangeDateParams[1];
-	
-	while( $filename = readdir(DIRTRANS) ){
-		$dateFileName = $filename;
-		$dateFileName =~ s/.txt//;
-		if($dateFileName ge $dateFrom && $dateFileName le $dateTo )	{
-			push(@fileNames, "$filename");	
-		}
-	}		
-}
-
-#Retorna el nombre de todos los archivos que se correspondan con una lista de fechas
-sub getFileNamesByList{
-	while( $filename = readdir(DIRTRANS) ){
-		$dateFileName = $filename;
-		$dateFileName =~ s/.txt//;
-
-		for( $i = 0; $i <= $#dateParams; $i++){
-			if($dateFileName eq @dateParams[$i])	{
-				push(@fileNames, "$filename");	
-			}
-		}
-	}		
-}
-
-#Recupera los archivos a utlizar
-sub getFileNames{
 	#Recupero los archivos que voy a usar para trabajar segun las fechas ingresadas
 	if(!opendir(DIRTRANS, $tranfer)) 
 	{
 		print "Se ha producido un error accediendo al directorio de datos\n"; 	
 		exit;
 	}
-	@fileNames = ();#Array que contiene a los archivos con los que se van a generar los reportes
-	
-	if($parameters{"-rf"}){
-		getFileNamesByRange();
-	} elsif($parameters{"-f"}){
-		getFileNamesByList();
-	} else {
-		getAllFileNames();
-	}
+
+	while( $filename = readdir(DIRTRANS) ){
+		if( $filename =~ /[0-9]{8,8}.txt/ ){ ##Recupero solo los archivos tipo txt
+			push(@fileNames, "$filename");	
+		}
+	}		
 
 	closedir(DIRTRANS);
 
 	if( $#fileNames == -1 ){
-		print "No se encontraron archivos para los filtros especificados\n";
+		print "No se encontraron archivos fuente\n";
 		exit;
+	}
+
+	return @fileNames;
+}
+
+#Retorna 1 si existe un archivo fuente con el nombre indicado
+sub existsSourceFile{
+	my $name = @_[0];
+	foreach my $fileName (&getAllFileNames()){
+		if($name eq $fileName){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+#Genera un timestamp para darle como nombre al reporte de salida
+sub getLoggingTime {
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+    my $nice_timestamp = sprintf ( "%04d%02d%02d%02d%02d%02d",
+                                   $year+1900,$mon+1,$mday,$hour,$min,$sec);
+    return $nice_timestamp;
+}
+
+#Segun los parametros indicados por el usuario, retorna la lista de las salidas para el reporte.
+#Si no existen los directorios indicados, los intenta crear
+sub prepareOutputs{
+	use File::Path qw( make_path );
+	my $folder = "$reports/@_[0]";
+	my @outputs = ();
+	if($outputParams{"sa"} || $outputParams{"sao"}){
+		my $fileName = getLoggingTime();
+		if (!-d "$folder") {
+		    make_path $folder or die "Se ha producido un error creando el reporte: $folder. No se guardará el reporte en el archivo indicado.";
+		}
+		open(OUTPUTFILE,">$folder/$fileName.txt") || die "Error generando el archivo de salida. No se guardará el reporte en el archivo indicado.";
+		push(@outputs, OUTPUTFILE);
+		print "El reporte se guardará en el archivo: $fileName.txt\n";
+	}
+	if($outputParams{"sao"} || !$outputParams{"sa"}){
+		push(@outputs, STDOUT);	
+	}
+	return @outputs;
+}
+
+sub closeOutputs{
+	foreach $output (@_){
+		if($output ne "STDOUT"){
+			close $output;
+		}
 	}
 }
 
-sub showFileNames(){
-	print "Se utilizarán los siguientes archivos:\n";
-	for(my $j=0; $j <= $#fileNames; $j++){
-		print "\t@fileNames[$j]\n";	
+sub getAllFileLines{
+	open(INPUTFILE,"<$tranfer/@_[0]") || die "Error abriendo el archivo @_[0]";
+	my @lines = <INPUTFILE>;
+	close (INPUTFILE);
+	return @lines;
+}
+
+#Divide la linea en los valores de interes
+sub splitLine{
+	my $line = @_[0];	
+	chomp($line);
+	($source, $origin, $originCode, $dest, $destCode, $date, $import, $state, $cbuOrigin, $cbuDest) = split(";",$line);
+	return &isAValidLine(); 
+}
+
+#Retorna 1 si la linea que se acaba de dividir cumple con los parametros y 0 sino
+sub isAValidLine{
+	my $isValid = 0;
+	
+	if(@originParams){
+		$isValid = 0;
+		for(my $t = 0; $t <= $#originParams; $t++){
+			if(@originParams[$t] eq $origin){
+				$isValid = 1;
+			}
+		}
+		if(!$isValid){
+			return 0;		
+		}
 	}
+	
+	if(@destParams){
+		$isValid = 0;
+		for(my $t = 0; $t <= $#destParams; $t++){
+			if(@destParams[$t] eq $origin){
+				$isValid = 1;
+			}
+		}
+		if(!$isValid){
+			return 0;		
+		}
+	}
+	
+	if(@stateParams){
+		$isValid = 0;
+		for(my $t = 0; $t <= $#stateParams; $t++){
+			if(@stateParams[$t] eq $state){
+				$isValid = 1;
+			}
+		}
+		if(!$isValid){
+			return 0;		
+		}
+	}
+
+	if(@rangeImportParams){
+		my $if = @rangeImportParams[0];
+		my $it = @rangeImportParams[1];		
+		if($import < $if || $it < $import){
+			return 0;
+		}
+	}
+	return 1;
 }
 
 sub listByOriginEntity{
@@ -375,10 +1013,8 @@ sub listByOriginEntity{
 	%report = ();
 
 	for($j = 0; $j <= $#fileNames; $j++){
-		openInputFile(@fileNames[$j]);
-		@lines = <INPUTFILE>;
-		close (INPUTFILE);
-
+		my @lines = &getAllFileLines(@fileNames[$j]);
+		
 		if($#lines >= 0){
 			for($k = 0; $k <= $#lines; $k++){
 				if(splitLine(@lines[$k])){
@@ -462,9 +1098,7 @@ sub listByDestinationEntity{
 	%report = ();
 
 	for($j = 0; $j <= $#fileNames; $j++){
-		openInputFile(@fileNames[$j]);
-		@lines = <INPUTFILE>;
-		close (INPUTFILE);
+		my @lines = &getAllFileLines(@fileNames[$j]);
 
 		if($#lines >= 0){
 			for($k = 0; $k <= $#lines; $k++){
@@ -526,7 +1160,6 @@ sub listByDestinationEntity{
 		for my $fh (@outputs) { printf $fh "\n"; }; 
 	}
 	closeOutputs(@outputs);
-
 }
 
 sub listByCbu{
@@ -545,9 +1178,7 @@ sub listByCbu{
 
 	%totalControl = (debit => 0, credit => 0);
 	for($j = 0; $j <= $#fileNames; $j++){
-		openInputFile(@fileNames[$j]);
-		@lines = <INPUTFILE>;
-		close (INPUTFILE);
+		my @lines = &getAllFileLines(@fileNames[$j]);
 		
 		$day = @fileNames[$j];
 		$day =~ s/.txt//;
@@ -598,17 +1229,14 @@ sub listByCbu{
 }
 
 sub balanceByEntity{
-	my $showDetails = @_[0];
 	@fileNames = sort(@fileNames); #ordeno los archivos por fecha para su tratamiento
 	
-	my $entity = @_[0];
-	my $entityCode = @_[1];
+	my $entity = $entityParam{"abr"};
+	my $entityCode = $entityParam{"code"};
 
 	%balance = ( credit => 0, debit => 0);	
 	for($j = 0; $j <= $#fileNames; $j++){
-		openInputFile(@fileNames[$j]);
-		@lines = <INPUTFILE>;
-		close (INPUTFILE);
+		my @lines = &getAllFileLines(@fileNames[$j]);
 
 		if($#lines >= 0){
 			for($k = 0; $k <= $#lines; $k++){
@@ -646,255 +1274,4 @@ sub balanceByEntity{
 	
 	for my $fh (@outputs) { printf $fh "\n"; }
 	closeOutputs(@outputs);
-
 }
-
-sub openInputFile{
-	open(INPUTFILE,"<$tranfer/@_[0]") || die "Error";
-}
-
-#Genera un timestamp para darle como nombre al reporte de salida
-sub getLoggingTime {
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-    my $nice_timestamp = sprintf ( "%04d%02d%02d%02d%02d%02d",
-                                   $year+1900,$mon+1,$mday,$hour,$min,$sec);
-    return $nice_timestamp;
-}
-
-#Segun los parametros indicados por el usuario, retorna la lista de las salidas para el reporte.
-#Si no existen los directorios indicados, los intenta crear
-sub prepareOutputs{
-	use File::Path qw( make_path );
-	my $folder = "$reports/@_[0]";
-	my @outputs = ();
-	if($parameters{"-sa"} || $parameters{"-sao"}){
-		my $fileName = getLoggingTime();
-		if (!-d "$folder") {
-		    make_path $folder or die "Se ha producido un error creando el reporte: $folder. No se guardará el reporte en el archivo indicado.";
-		}
-		open(OUTPUTFILE,">$folder/$fileName.txt") || die "Error generando el archivo de salida. No se guardará el reporte en el archivo indicado.";
-		push(@outputs, OUTPUTFILE);
-		print "El reporte se guardará en el archivo: $fileName\n";
-	}
-	if($parameters{"-sao"} || !$parameters{"-sa"}){
-		push(@outputs, STDOUT);	
-	}
-	return @outputs;
-}
-
-sub closeOutputs{
-	foreach $output (@_){
-		if($output ne "STDOUT"){
-			close $output;
-		}
-	}
-}
-
-
-#Divide la linea en los valores de interes
-sub splitLine{
-	$line = @_[0];	
-	chomp($line);
-	($source, $origin, $originCode, $dest, $destCode, $date, $import, $state, $cbuOrigin, $cbuDest) = split(";",$line);
-	return isAValidLine(); 
-}
-
-#Retorna 1 si la linea que se acaba de dividir cumple con los parametros y 0 sino
-sub isAValidLine{
-	$isValid = 0;
-	if($parameters{"-f"}){
-		$isValid = 0;
-		for($t = 0; $t <= $#dateParams; $t++){
-			if(@dateParams[$t] eq $date){
-				$isValid = 1;
-			}
-		}		
-		if(!$isValid){
-			return 0;		
-		}
-	}
-
-	if($parameters{"rf"}){
-		my $df = @rangeDateParams[0];
-		my $dt = @rangeDateParams[1];		
-		if($date < $df || $dt < $date){
-			return 0;
-		}
-	}
-
-	if($parameters{"-o"}){
-		$isValid = 0;
-		for(my $t = 0; $t <= $#originParams; $t++){
-			if(@originParams[$t] eq $origin){
-				$isValid = 1;
-			}
-		}
-		if(!$isValid){
-			return 0;		
-		}
-	}
-
-	if($parameters{"-d"}){
-		$isValid = 0;
-		for(my $t = 0; $t <= $#destParams; $t++){
-			if(@destParams[$t] eq $origin){
-				$isValid = 1;
-			}
-		}
-		if(!$isValid){
-			return 0;		
-		}
-	}
-
-	if($parameters{"-e"}){
-		$isValid = 0;
-		for(my $t = 0; $t <= $#stateParams; $t++){
-			if(@stateParams[$t] eq $state){
-				$isValid = 1;
-			}
-		}
-		if(!$isValid){
-			return 0;		
-		}
-	}
-
-	if($parameters{"-ri"}){
-		my $if = @rangeImportParams[0];
-		my $it = @rangeImportParams[1];		
-		if($import < $if || $it < $import){
-			return 0;
-		}
-	}
-	return 1;
-}
-
-sub parser{ #devuelve el string que se le pasa por parametro como un vector. P.ej: "-u santander galicia -> (-u,santander,galicia)"
-	$string=@_[0];
-	@parametros = split(/\s/, $string);
-	return @parametros;
-}
-
-sub pedirFiltros{
-	@filtros; # ejemplo, un string de la forma: -o galicia santander
-	$i = 0;
-	$save = "a";
-	$exit = "x";
-	while( $filtro ne $save){
-		system 'clear'; #Limpio la pantalla
-		print "\t Filtros disponibles\n";
-		print " (-u) \t Fuente \n ";
-		print "(-o) \t Entidad origen  \n ";
-		print "(-d) \t Entidad destino \n ";
-		print "(-e) \t Estado \n ";
-		print "(-f) \t Fecha \n ";
-		print "(-rf)\t Rango de fechas \n ";
-		print "(-ri) \t Importe \n ";
-		print "(-eb) \t Entidad balance\n ";
-		print "(-cbu) \t CBU \n ";
-		print "(a) \t Volver salvando filtros\n";
-		print " (x) \t Volver sin guardar \n ";
-		$filtro = <STDIN>;
-		chomp $filtro;
-		if ($filtro ne $exit && $save){
-			@filtros[$i] = $filtro;
-			$i++;
-		}elsif ($filtro eq $exit){
-			return 0;}
-	}return @filtros;	
-}
-
-sub pedirOpListado{
-	system 'clear'; #Limpio la pantalla
-	print "\t Opciones de Listado \n";
-	print "\t Elija una opcion \n";
-	print " Default (Por pantalla) \n";
-	print "(-sa) \t Salida a archivo \n";
-	print "(-sao) \t Salida pantalla y archivo \n";
-	print "(x) \t Volver \n";
-	$opListado = <STDIN>;
-	chomp $opListado;
-	if ($opListado eq "-sa" || "-sao"){
-		return $opListado;
-	}
-}
-
-sub pedirDatos{
-	system 'clear'; #Limpio la pantalla
-	print "\t Ingrese los datos sobre los que quiere aplicar la accion \n";
-	$string_dato = <STDIN>;
-	chomp $string_dato;
-	@datos_array = parser($string_dato);
-	return @datos_array;
-}
-
-sub menu{
-	$option = "";
-	@filtros;
-	$opListado;
-	while( 1 ){
-		system 'clear'; #Limpio la pantalla
-		print "\tMenu de Reportes\t \n";
-		print "(1) \tListado por entidad origen\n";
-		print "(2) \tListado por entidad destino\n";
-		print "(3) \tBalance por entidad\n";
-		print "(4) \tListado por CBU\n";
-		print "(x) \tSalir\n";
-		$option = <STDIN>;
-		chomp $option;
-
-		switch($option){
-			case "1" { 
-				@datos = pedirDatos();
-				@filtros = pedirFiltros();
-				$opListado = pedirOpListado();
-				
-				#Llamar a la funcion que da el listado por entidad origen 
-			}
-			case "2" {
-				@datos = pedirDatos();
-				@filtros = pedirFiltros();
-				$opListado = pedirOpListado();
-				#Llamar a la funcion que da el listado por entidad destino
-			}
-			case "3" {
-				@datos = pedirDatos();
-				@filtros = pedirFiltros();
-				$opListado = pedirOpListado();
-				#Llamar a la funcion que da el balance por entidad
-			}
-			case "4" {
-				@datos = pedirDatos();
-				@filtros = pedirFiltros();
-				$opListado = pedirOpListado();
-				#Llamar a la funcion que da el listado por CBU
-			}
-			case "x" { 
-				exit;
-			}
-		}
-		
-	}
-	
-}
-
-##########INICIO DE EJECUCION##########
-
-menu();
-
-system 'clear'; #Limpio la pantalla
-
-#getParameters(); #Otengo los parametros
-
-#showParameters(); #Muestro los parametros
-
-#getFileNames(); #Obtengo los archivos a utilizar
-
-#showFileNames(); #Muestro los archivos fuente que fueron encontrados segun los filtros
-
-#listByCbu("0030032120005404458661");
-
-
-#listByDestinationEntity(1);
-#listByOriginEntity(0);
-#balanceByEntity("BAPRO", "003");
-
