@@ -22,6 +22,7 @@ sub showReportList{
 		printf "%10s %16s", "(4)", "Listado por entidad destino con detalles\n";
 		printf "%10s %16s", "(5)", "Balance por entidad\n";
 		printf "%10s %16s", "(6)", "Listado por CBU\n";
+		printf "%10s %5s", "(h)", "Ayuda\n";
 		printf "%10s %5s", "(x)", "Salir\n";
 
 		$option = &readFromConsole();
@@ -56,6 +57,10 @@ sub showReportList{
 				&listByCbu();
 				exit;	
 			}
+			case "h"{
+				&showHelp();
+				&showReportList();
+			}
 			case "x"{
 				exit;
 			}
@@ -65,6 +70,198 @@ sub showReportList{
 		}
 
 	}
+}
+
+sub showHelpMenu{
+	printf "%16s", "Menú de ayuda:\n";
+	printf "%10s %16s", "(1)", "Listado por entidad origen\n";
+	printf "%10s %16s", "(2)", "Listado por entidad origen con detalles\n";
+	printf "%10s %16s", "(3)", "Listado por entidad destino\n";
+	printf "%10s %16s", "(4)", "Listado por entidad destino con detalles\n";
+	printf "%10s %16s", "(5)", "Balance por entidad\n";
+	printf "%10s %16s", "(6)", "Listado por CBU\n";
+	printf "%10s %5s", "(x)", "Volver al menú principal\n";
+}
+
+sub closeHelp{
+	my $option;
+	while (1) {
+		$option = &readFromConsole();
+		if($option eq "b"){
+			&showHelp();
+		}
+		if($option eq "x"){
+			&showReportList();
+		}
+	}
+}
+
+sub showHelp{
+	my $option;
+	system clear;
+	do{
+		showHelpMenu();		
+		$option = &readFromConsole();
+		switch($option){
+			case "1"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por entidad origen\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Lista el importe total de las transferencias emitidas por un banco que cumplen con los parámetros \n");
+				print("de invocación.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n"); 
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "2"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por entidad origen\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Lista las transferencias emitidas por un banco que cumplen con los parámetros de invocación.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "3"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por entidad origen\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Lista el importe total de las transferencias recibidas por un banco que cumplen con los parámetros\n");
+				print("de invocación.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "4"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por entidad origen\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Lista las transferencias recibidas por un banco que cumplen con los parámetros de invocación.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();	
+			}
+			case "5"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Balance por entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Listar todas las transferencias recibidas y emitidas para una entidad e indica si el resultado fue\n");
+				print("positivo o negativo.\n");
+				print("Se puede solicitar listar las transferencias de un banco, varios bancos o todos los bancos\n");
+				print("No considera las transferencias efectuadas dentro de la misma entidad\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "Entidad: entidad sobre la que se quiere realizar el balance\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");				
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "6"{
+				system clear;
+				printf('%1$s'x101 . "\n", "-");
+				print("Listado por CBU\n");
+				printf('%1$s'x101 . "\n", "-");
+				printf('%1$s'x101 . "\n", "-");
+				print("Listar las transferencias recibidas / emitidas por una determinada CBU que cumplen con los parámetros\n");
+				print("de invocación.\n");
+				printf('%1$s'x101 . "\n", "-");
+				print("Acepta los siguientes parámetros:\n");
+				printf("%10s %s", "*", "CBU: número de CBU sobre el que se quiere realizar el reporte\n");
+				printf("%10s %s", "*", "Entidad Origen: una, varias o todas\n");
+				printf("%10s %s", "*", "Entidad Destino: una, varias o todas\n");
+				printf("%10s %s", "*", "Rango de importes: dos números reales positivos\n");
+				printf("%10s %s", "*", "Estados: Anulada o Pendiente\n");
+				printf("%10s %s", "*", "Fuentes: uno, varios o todos los archivos fuente para el reporte\n");
+				print("Se le puede especificar que la salida sea por consola, a archivo o por consola y archivo\n");
+				print("En el caso de especificar la creación de un archivo de salida, este se guardará en el directorio:\n");
+				print("Listados dentro del directorio definido para los reportes\n");
+
+				printf('%1$s'x101 . "\n", "-");
+				printf "%10s %5s", "(b)", "Volver al menú anterior\n";
+				printf "%10s %5s", "(x)", "Volver al menú principal\n";
+				&closeHelp();
+			}
+			case "x"{
+				&showReportList();
+			}
+			else{
+				&showInvalidOption($option);
+			}
+		}
+	}while($option ne "x");
 }
 
 sub validateIfEnvironmentIsInit{
