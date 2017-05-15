@@ -45,6 +45,8 @@ mover_archivos() {
   mv Start  "$CURRENT_PATH/$DIRBIN"
   mv Stop  "$CURRENT_PATH/$DIRBIN"
   mv Init  "$CURRENT_PATH/$DIRBIN"
+  mv Validate  "$CURRENT_PATH/$DIRBIN"
+  mv "Reports.pl"  "$CURRENT_PATH/$DIRBIN"
 }
 
 ## Guardar las variables de configuracion
