@@ -25,7 +25,7 @@ function logError() {
 function tiene_fecha_invalida() {
 	fecha=$1
 	fecha_filename=$2
-	patron='[0-9][0-1][0-9][0-3][0-9]'
+	patron='[0-9]{4}[0-1][0-9][0-3][0-9]'
 	if [[ $fecha =~ $patron ]] && date -d "$fecha" >/dev/null 2>&1	
 	then
 		condicion=$(date -d "$fecha_filename" "+%s")
@@ -43,7 +43,7 @@ function tiene_fecha_invalida() {
 }
 
 function no_existe_cbu() {
-	entidades=$(awk -F";" '{print $2}' $MAESTROS/"bamae.txt")
+	entidades=$(awk -F";" '{print $2}' "$MAESTROS"/"bamae.txt")
 	principio_cbu=$(echo "$1" | cut -c1-3)
 	o_IFS=$IFS
 	IFS=$2
@@ -64,16 +64,16 @@ function es_archivo_repetido() {
 		nombre=$(basename "$nombre")
 		if [[ "$1" == "$nombre" ]]
 		then
-			echo "Archivo $1 duplicado" 
+			logError "Archivo $1 duplicado" 
 			return 0
 		fi
-	done < <(find $VALIDADOS -type f)
-	echo "El archivo $1 no es duplicado"
+	done < <(find "$VALIDADOS" -type f)
+	logInfo "El archivo $1 no es duplicado"
 	return 1
 }
 
 function tiene_cantidad_registros_incorrecta() {
-	registros_archivo=$(awk -F";" '{print $1}' $ACEPTADOS/$1)
+	registros_archivo=$(awk -F";" '{print $1}' "$ACEPTADOS"/$1)
 	j=0
 	cantidad_registros_header=0
 	cantidad_registros=0
@@ -90,7 +90,7 @@ function tiene_cantidad_registros_incorrecta() {
 
 	if [[ $cantidad_registros -ne $cantidad_registros_header ]]
 	then	
-		logInfo "Error en la cantidad de registros en el archivo $1: leidos: $cantidad_registros Cantidad informada: $cantidad_registros_header"
+		logError "Error en la cantidad de registros en el archivo $1: leidos: $cantidad_registros Cantidad informada: $cantidad_registros_header"
 		return 0
 	fi
 
@@ -100,7 +100,7 @@ function tiene_cantidad_registros_incorrecta() {
 }
 
 function tiene_monto_incorrecto(){
-	registros_archivo=$(awk -F";" '{print $2}' $ACEPTADOS/$1)
+	registros_archivo=$(awk -F";" '{print $2}' "$ACEPTADOS"/$1)
 	j=0
 	cantidad_monto_header=0
 	cantidad_monto=0
@@ -120,7 +120,7 @@ function tiene_monto_incorrecto(){
 	if [[ $(echo "$cantidad_monto_header!=$cantidad_monto" | bc ) -eq 1 ]]
 
 	then	
-		logInfo "Error en hash total: Sumatoria: $cantidad_monto Monto informado: $cantidad_monto_header"
+		logError "Error en hash total: Sumatoria: $cantidad_monto Monto informado: $cantidad_monto_header"
 		return 0
 	fi
 
@@ -130,20 +130,20 @@ function tiene_monto_incorrecto(){
 
 
 function tiene_formato_valido() {
-	columnas_header=$(awk -F";" 'NR == 1 {print NF}' $ACEPTADOS/$1)
-	maxima_cantidad_columnas_cuerpo=$(awk -F";" 'NR > 1 {print NF}' $ACEPTADOS/$1 | sort -nu | head -n 1)
-	minima_cantidad_columnas_cuerpo=$(awk -F";" 'NR > 1 {print NF}' $ACEPTADOS/$1 | sort -nu | tail -n 1)
+	columnas_header=$(awk -F";" 'NR == 1 {print NF}' "$ACEPTADOS"/"$1")
+	maxima_cantidad_columnas_cuerpo=$(awk -F";" 'NR > 1 {print NF}' "$ACEPTADOS"/"$1" | sort -nu | head -n 1)
+	minima_cantidad_columnas_cuerpo=$(awk -F";" 'NR > 1 {print NF}' "$ACEPTADOS"/"$1" | sort -nu | tail -n 1)
 
 	if [[ columnas_header -ne 2 ]]
 	then
-		logInfo "El archivo $1 no tiene la cantidad de columnas correctas."
+		logError "El archivo $1 no tiene la cantidad de columnas correctas."
 		return 0
 	elif [[ maxima_cantidad_columnas_cuerpo -eq minima_cantidad_columnas_cuerpo ]]
 	then
 		logInfo "El archivo $1 tiene la cantidad de columnas correctas."
 		return 1
 	else
-		logInfo "El archivo $1 no tiene la cantidad de columnas correctas."
+		logError "El archivo $1 no tiene la cantidad de columnas correctas."
 		return 0
 	fi
 
@@ -152,14 +152,14 @@ function tiene_formato_valido() {
 function tiene_formato_incorrecto_fecha() {
 	fecha_filename=$(echo "$1" | cut -d "_" -f 2)
 	fecha_filename=$(echo "$fecha_filename" | cut -d "." -f 1)
-	registros_archivo=$(awk -F";" 'NR > 1 {print $1}' $ACEPTADOS/$1)
+	registros_archivo=$(awk -F";" 'NR > 1 {print $1}' "$ACEPTADOS"/"$1")
 	registro=1
 	for z in $registros_archivo
 	do	
 		fecha=$z
 		if tiene_fecha_invalida $fecha $fecha_filename
 		then
-			logInfo "Error de formato del archivo $1 en registro nro $registro"
+			logError "Error de formato del archivo $1 en registro nro $registro"
 			return 0
 		fi
 		registro=$(($registro+1))
@@ -170,7 +170,7 @@ function tiene_formato_incorrecto_fecha() {
 }
 
 function tiene_formato_incorrecto_monto() {
-	registros_archivo=$(awk -F";" 'NR > 1 {print $2 ";" $3"%"}' $ACEPTADOS/$1)
+	registros_archivo=$(awk -F";" 'NR > 1 {print $2 ";" $3"%"}' "$ACEPTADOS"/$1)
 	registro=1
 	old_IFS=$IFS
 	IFS='%'
@@ -186,19 +186,19 @@ function tiene_formato_incorrecto_monto() {
 			then
 				if [[  $(echo "$monto<=0" | bc ) -eq 1  ]]
 				then
-				logInfo "Error de formato del archivo $1 en registro nro $registro"
+				logError "Error de formato del archivo $1 en registro nro $registro"
 					return 0
 				fi
 			elif [[ $estado == "Anulada" ]]
 			then
 				if [[ $(echo "$monto>=0" | bc ) -eq 1 ]]
 				then
-				logInfo "Error de formato del archivo $1 en registro nro $registro"
+				logError "Error de formato del archivo $1 en registro nro $registro"
 					return 0
 				fi
 			fi
 		else
-			logInfo "Error de formato del archivo $1 en registro nro $registro"
+			logError "Error de formato del archivo $1 en registro nro $registro"
 			return 0
 		fi
 		registro=$(($registro+1))
@@ -209,13 +209,13 @@ function tiene_formato_incorrecto_monto() {
 }
 
 function tiene_formato_incorrecto_estado() {
-	registros_archivo=$(awk -F";" 'NR > 1 {print $3}' $ACEPTADOS/$1)
+	registros_archivo=$(awk -F";" 'NR > 1 {print $3}' "$ACEPTADOS"/$1)
 	registro=1
 	for z in $registros_archivo
 	do	
 		if  ! { [[  $z == "Pendiente" ]] || [[  $z == "Anulada" ]];}
 		then
-			logInfo "Error de formato del archivo $1 en el registro nro $registro"
+			logError "Error de formato del archivo $1 en el registro nro $registro"
 			return 0
 		fi
 		registro=$(($registro+1))
@@ -226,7 +226,7 @@ function tiene_formato_incorrecto_estado() {
 }
 
 function tiene_formato_incorrecto_cbus() {
-	registros_archivo=$(awk -F";" 'NR > 1{print $4 ";" $5"%"}' $ACEPTADOS/$1)
+	registros_archivo=$(awk -F";" 'NR > 1{print $4 ";" $5"%"}' "$ACEPTADOS"/$1)
 	registro=1
 	old_IFS=$IFS
 	IFS='%'
@@ -242,21 +242,21 @@ function tiene_formato_incorrecto_cbus() {
 			then
 				if  no_existe_cbu $cbu_origen "${old_IFS}"
 				then
-					logInfo "Error de formato del archivo $1 en registro nro $registro"
+					logError "Error de formato del archivo $1 en registro nro $registro"
 					return 0
 				fi
 
 				if no_existe_cbu $cbu_destino "${old_IFS}"
 				then
-					logInfo "Error de formato del archivo $1 en registro nro $registro"
+					logError "Error de formato del archivo $1 en registro nro $registro"
 					return 0
 				fi
 			else
-				logInfo "Error de formato del archivo $1 en registro nro $registro"
+				logError "Error de formato del archivo $1 en registro nro $registro"
 				return 0
 			fi
 		else
-			logInfo "Error de formato del archivo $1 en registro nro $registro"
+			logError "Error de formato del archivo $1 en registro nro $registro"
 			return 0
 		fi
 		registro=$(($registro+1))
@@ -274,61 +274,61 @@ function procesar_aceptados() {
 		return 1
 	fi
 	archivos_procesados=''
-	find $ACEPTADOS -type f | while read FILE
+	find "$ACEPTADOS" -type f | while read FILE
 	do
 		i=$(basename "$FILE")
 		if es_archivo_repetido "$i" "$archivos_procesados";
 		then
-			mv"$ACEPTADOS/$i" $RECHAZADOS
+			mv"$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi	
 
 		if tiene_formato_valido "$i";
 		then
-			mv "$ACEPTADOS/$i" $RECHAZADOS
+			mv "$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi	
 		
 		if tiene_cantidad_registros_incorrecta "$i";
 		then
-			mv "$ACEPTADOS/$i" $RECHAZADOS
+			mv "$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi	
 		
 		if tiene_monto_incorrecto "$i";
 		then
-			mv "$ACEPTADOS/$i" $RECHAZADOS
+			mv "$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi
 		
 		if tiene_formato_incorrecto_fecha "$i";
 		then
-			mv "$ACEPTADOS/$i" $RECHAZADOS
+			mv "$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi
 
 		if tiene_formato_incorrecto_estado "$i";
 		then
-			mv "$ACEPTADOS/$i" $RECHAZADOS
+			mv "$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi
 
 		if tiene_formato_incorrecto_monto "$i";
 		then
-			mv "$ACEPTADOS/$i" $RECHAZADOS
+			mv "$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi
 		
 		if tiene_formato_incorrecto_cbus "$i";
 		then
-			mv "$ACEPTADOS/$i" $RECHAZADOS
+			mv "$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi

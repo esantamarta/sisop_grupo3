@@ -18,14 +18,14 @@
 ############################################################################################
 
 #REVISAR QUE LAS VARIABLES DE AMBIENTE SEAN LAS MISMAS QUE LAS SETEADAS EN EL INICIALIZADOR
-VARIABLES_AMBIENTE=($GRUPO $BINARIOS $MAESTROS $NOVEDADES $ACEPTADOS $RECHAZADOS $VALIDADOS $REPORTES $LOG)
+VARIABLES_AMBIENTE=("$GRUPO" "$BINARIOS" "$MAESTROS" "$NOVEDADES" "$ACEPTADOS" "$RECHAZADOS" "$VALIDADOS" "$REPORTES" "$LOG")
 COUNT_VARIABLES_AMBIENTE=9
 
 # Valida que el ambiente haya sido inicializado previamente
 # Recibe el array de variables de ambiente y el contador de variables
 # Si alguna variable esta vacia, el size del array es menor al contador
 function validar_ambiente_inicializado() {
-	if [ ${#VARIABLES_AMBIENTE[@]} -ne $2 ] 
+	if [ ${#VARIABLES_AMBIENTE[@]} -ne $1 ] 
 		then
 		#echo "LOG: AMBIENTE NO INICIALIZADO"
 		#Si el ambiente no esta inicializado no puedo guardar en log
@@ -52,7 +52,7 @@ function logError() {
 }
 
 function es_archivo_ilegible () {
-	NOVEDAD=$NOVEDADES/$1
+	NOVEDAD="$NOVEDADES"/"$1"
 	if [ -r "$NOVEDAD" ]
 	then
 		logInfo "El archivo $1  es legible"
@@ -68,7 +68,7 @@ function es_archivo_ilegible () {
 # Recibe un archivo, devuelve true si es vacio
 function es_archivo_vacio() {
 
-	NOVEDAD=$NOVEDADES/$1
+	NOVEDAD="$NOVEDADES"/"$1"
 	if [ -s "$NOVEDAD" ]
 	then
 		logInfo "El archivo $1 no esta vacio"
@@ -81,7 +81,7 @@ function es_archivo_vacio() {
 
 function es_archivo_irregular() {
 
-	NOVEDAD=$NOVEDADES/$1
+	NOVEDAD="$NOVEDADES"/"$1"
 	if [ -f "$NOVEDAD" ]
 	then
 		logInfo "El archivo $1 es regular"
@@ -177,49 +177,49 @@ function procesar_novedades() {
 		logError "No se encuentra el archivo de maestros. Las novedades no seran procesadas"
 		return 1
 	fi
-	entidades=$(awk -F";" '{print $1}' $MAESTROS/"bamae.txt")
+	entidades=$(awk -F";" '{print $1}' "$MAESTROS"/"bamae.txt")
 
 	FILES=$1
 	#for i in ${FILES[@]}
-	find $NOVEDADES -type f | while read FILE
+	find "$NOVEDADES" -type f | while read FILE
 	do
 		i=$(basename "$FILE")
 		if es_archivo_ilegible "$i"
 		then
-			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" "$RECHAZADOS"
 			continue
 		fi	
 
 		if es_archivo_vacio "$i";
 		then
-			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" "$RECHAZADOS"
 			continue
 		fi	
 		
 		if es_archivo_irregular "$i";
 		then
-			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" "$RECHAZADOS"
 			continue
 		fi
 		
 		if tiene_formato_incorrecto "$i";
 		then
-			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" "$RECHAZADOS"
 			continue
 		fi
 		
 		if no_existe_entidad "$i" "$entidades";
 		then
-			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" "$RECHAZADOS"
 			continue
 		fi
 
 		if es_fecha_invalida "$i";
 		then
-			mover_archivo "$NOVEDADES/$i" $RECHAZADOS
+			mover_archivo "$NOVEDADES/$i" "$RECHAZADOS"
 			continue
 		fi
-		mover_archivo "$NOVEDADES/$i" $ACEPTADOS
+		mover_archivo "$NOVEDADES/$i" "$ACEPTADOS"
 	done 
 }
 
@@ -240,7 +240,7 @@ function invocar_validar_aceptados() {
 
 
 #Valida si el ambiente esta inicializado, sino sale del programa
-validar_ambiente_inicializado $VARIABLES_AMBIENTE $COUNT_VARIABLES_AMBIENTE
+validar_ambiente_inicializado $COUNT_VARIABLES_AMBIENTE
 
 touch "$LOG"/"Daemon.log" 
 
@@ -251,7 +251,7 @@ logInfo " "
 
 # 1s = 1 segundo
 # 1m = 1 minuto 
-WAIT=6s  
+WAIT=12s  
 
 LOOPS=0
 
@@ -263,11 +263,11 @@ do
 	
 #funcionalidad del daemon
 
-NOV_FILES="$(ls $NOVEDADES)"
+NOV_FILES=$(ls "$NOVEDADES")
 if [ -z "$NOV_FILES" ]
 	then
 	logInfo "No hay novedades"
-	invocar_validar_aceptados "$(ls $ACEPTADOS)"
+	invocar_validar_aceptados $(ls "$ACEPTADOS")
 else
 	logInfo "Hay novedades para procesar"
 	procesar_novedades "$NOV_FILES"
