@@ -48,3 +48,11 @@ Una vez inicializada la aplicación podrá lanzar el proceso Demonep con el coma
 
 En caso de querer detener el proceso Demonep deberá ejecutar:
 ./Stop Deamon
+
+######### REPORTES #########
+Antes de generar reportes deberá inicializarse el sistema mediante el proceso Inicializador.
+
+Una vez inicializado se puede invocar al generador de reportes con el comando dentro de la carpeta bin:
+perl Reports.pl
+
+Para mas información sobre los reportes, los filtros y opciones de salida disponibles consulte el apartado de ayuda dentro del generador.
