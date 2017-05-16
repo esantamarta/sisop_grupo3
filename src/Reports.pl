@@ -285,9 +285,10 @@ sub showListByOriginEntityFilters{
 	@destParams = &showDestiniEntitiesFilters();
 	@rangeImportParams = &showImportFilters();
 	@stateParams = &showStateFilters();
-	@fileNames = &showSourceFilters();
+	@sourceParams = &showSourceFilters();
 	%outputParams = &showOutputOptions();
 
+	@fileNames = &getAllFileNames();
 	print ("\n");
 	print ("\n");
 	print ("Se utilizaron los siguientes filtros:");
@@ -322,7 +323,7 @@ sub showEntityBalanceFilters{
 	%entityParam = &showBalanceEntityFilters();
 	@rangeImportParams = &showImportFilters();
 	@stateParams = &showStateFilters();
-	@fileNames = &showSourceFilters();
+	@sourceParams = &showSourceFilters();
 	%outputParams = &showOutputOptions();
 
 	print ("\n");
@@ -362,7 +363,7 @@ sub showListByCbuFilters{
 	@destParams = &showDestiniEntitiesFilters();
 	@rangeImportParams = &showImportFilters();
 	@stateParams = &showStateFilters();
-	@fileNames = &showSourceFilters();
+	@sourceParams = &showSourceFilters();
 	%outputParams = &showOutputOptions();
 
 	print ("\n");
@@ -607,7 +608,7 @@ sub showSourceFilters{
 		switch($option){
 			case "1"{
 				if(&validateYesOrNo("¿Desea seleccionar todas las fuentes existentes? S/N\n")){
-					return &getAllFileNames();
+					return ();
 				}else{
 					return &showSourceFilters();
 				}
@@ -625,7 +626,7 @@ sub showSourceFilters{
 			}
 		}
 	}else{
-		return &getAllFileNames();
+		return ();
 	}
 }
 
@@ -666,7 +667,7 @@ sub listSourcesToFilter{
 			if($option eq "f"){
 				if(!keys %selectedFonts){
 					if(&validateYesOrNo("No ha ingresado fuentes. ¿Desea filtrar usando todas las fuentes? S/N\n")){
-						return &getAllFileNames();
+						return ();
 					}else{
 						if(&validateYesOrNo("No puede generar un reporte sin fuentes. ¿Desea ir al listado de reportes? S/N\n")){
 							&showReportList();
@@ -681,13 +682,13 @@ sub listSourcesToFilter{
 				}				
 			}else{
 				if(!exists $fonts{$option}){
-					if(&existsSourceFile($option)){
+					#if(&existsSourceFile($option)){
 						$selectedFonts{$option} = 1;
 						$isValidInput = 1;
-					}else{
-						print "No existe el archivo fuente $option\n";
-						$isValidInput = 0;
-					}
+					#}else{
+					#	print "No existe el archivo fuente $option\n";
+					#	$isValidInput = 0;
+					#}
 				}else{
 					print "La fuente ya ha sido ingresada\n";
 					$isValidInput = 0;
@@ -984,6 +985,18 @@ sub isAValidLine{
 			return 0;
 		}
 	}
+
+	if(@sourceParams){
+		$isValid = 0;
+		for(my $t = 0; $t <= $#sourceParams; $t++){
+			if(@sourceParams[$t] eq $source){
+				$isValid = 1;
+			}
+		}
+		if(!$isValid){
+			return 0;		
+		}
+	}
 	return 1;
 }
 
@@ -1035,12 +1048,16 @@ sub listByOriginEntity{
 		for my $fh (@outputs) { printf $fh "\n"; };
 		for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | Desde fecha: %-9s | Hasta Fecha: %-9s\n", "Banco Origen", $bank, "", $dateFrom, $dateTo; };
 		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
-		for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "ORIGEN", "DESTINO"; };
+		if($showDetails){
+			for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "ORIGEN", "DESTINO"; };
+		}else{
+			for my $fh (@outputs) { printf $fh "%-16s | %-15s |\n", "FECHA", "IMPORTE"; };
+		}
 		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; };
 		
 		my $total = 0;
 
-		foreach my $kdate (keys %{ $report{$bank} }) {
+		foreach my $kdate (sort keys %{ $report{$bank} }) {
 			my $subtotal = 0;
 			for(my $i = 0; $i <= $#{$report{$bank}{$kdate}}; $i++){
 				if($showDetails){
@@ -1119,12 +1136,16 @@ sub listByDestinationEntity{
 		for my $fh (@outputs) { printf $fh "\n"; }; 
 		for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | Desde fecha: %-9s | Hasta Fecha: %-9s\n", "Banco Origen", $bank, "", $dateFrom, $dateTo; }; 	
 		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; }; 
-		for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "ORIGEN", "DESTINO"; }; 
+		if($showDetails){
+			for my $fh (@outputs) { printf $fh "%-16s | %-15s | %-14s | %-22s | %-22s\n", "FECHA", "IMPORTE", "ESTADO", "ORIGEN", "DESTINO"; };
+		}else{
+			for my $fh (@outputs) { printf $fh "%-16s | %-15s |\n", "FECHA", "IMPORTE"; };
+		}
 		for my $fh (@outputs) { printf $fh '%1$s'x101 . "\n", "-"; }; 
 		
 		my $total = 0;
 
-		foreach my $kdate (keys %{ $report{$bank} }) {
+		foreach my $kdate (sort keys %{ $report{$bank} }) {
 			my $subtotal = 0;
 			for(my $i = 0; $i <= $#{$report{$bank}{$kdate}}; $i++){
 				if($showDetails){
@@ -1256,8 +1277,8 @@ sub balanceByEntity{
 	for my $fh (@outputs) { printf $fh "Balance de la entidad %s \n", $entity; }
 	for my $fh (@outputs) { printf $fh "\n"; }
 	for my $fh (@outputs) { printf $fh '%1$s'x73 . "\n", "-"; }
-	for my $fh (@outputs) { printf $fh "%-30s | %-15.2f | %-21s \n", "Desde $entityCode", $balance{credit}, "hacia otras entidades"; }	
-	for my $fh (@outputs) { printf $fh "%-30s | %-15.2f | %-21s \n", "Hacia $entityCode", $balance{debit}, "desde otras entidades"; }
+	for my $fh (@outputs) { printf $fh "%-30s | %-15.2f | %-21s \n", "Desde $entityCode", $balance{debit}, "hacia otras entidades"; }	
+	for my $fh (@outputs) { printf $fh "%-30s | %-15.2f | %-21s \n", "Hacia $entityCode", $balance{credit}, "desde otras entidades"; }
 	my $balanceResult = $balance{credit} - $balance{debit};
 	my $balanceResultState = "POSITIVO";
 	if($balanceResult < 0){
