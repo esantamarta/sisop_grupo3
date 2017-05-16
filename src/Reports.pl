@@ -305,8 +305,8 @@ sub showListByOriginEntityFilters{
 	if(@stateParams){
 		print "Estados: @stateParams\n";
 	}
-	if(@fileNames){
-		print "Fuentes: @fileNames\n";
+	if(@sourceParams){
+		print "Fuentes: @sourceParams\n";
 	}
 	if(%outputParams){
 		if(exists $outputParams{"p"}){
@@ -326,6 +326,7 @@ sub showEntityBalanceFilters{
 	@sourceParams = &showSourceFilters();
 	%outputParams = &showOutputOptions();
 
+	@fileNames = &getAllFileNames();
 	print ("\n");
 	print ("\n");
 	print ("Se utilizaron los siguientes filtros:");
@@ -343,8 +344,8 @@ sub showEntityBalanceFilters{
 	if(@stateParams){
 		print "Estados: @stateParams\n";
 	}
-	if(@fileNames){
-		print "Fuentes: @fileNames\n";
+	if(@sourceParams){
+		print "Fuentes: @sourceParams\n";
 	}
 	if(%outputParams){
 		if(exists $outputParams{"p"}){
@@ -366,6 +367,7 @@ sub showListByCbuFilters{
 	@sourceParams = &showSourceFilters();
 	%outputParams = &showOutputOptions();
 
+	@fileNames = &getAllFileNames();
 	print ("\n");
 	print ("\n");
 	print ("Se utilizaron los siguientes filtros:");
@@ -386,8 +388,8 @@ sub showListByCbuFilters{
 	if(@stateParams){
 		print "Estados: @stateParams\n";
 	}
-	if(@fileNames){
-		print "Fuentes: @fileNames\n";
+	if(@sourceParams){
+		print "Fuentes: @sourceParams\n";
 	}
 	if(%outputParams){
 		if(exists $outputParams{"p"}){
@@ -1179,10 +1181,9 @@ sub listByDestinationEntity{
 }
 
 sub listByCbu{
-	$cbu = @_[0];
+	$cbu = $cbuParam;
 	print "$cbu\n";
 	@fileNames = sort(@fileNames); #ordeno los archivos por fecha para su tratamiento
-
 
 	my @outputs = prepareOutputs("$lists");
 	for my $fh (@outputs) { printf $fh "\n"; };
