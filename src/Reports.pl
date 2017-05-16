@@ -1,7 +1,7 @@
 
-$ENV{'DIRMAESTRO'} = "maestro";
-$ENV{'DIRREPORTES'} = "reportes";
-$ENV{'DIRPROCESADOS'} = 'tranfer';
+#$ENV{'DIRMAESTRO'} = "maestro";
+#$ENV{'DIRREPORTES'} = "reportes";
+#$ENV{'DIRPROCESADOS'} = 'tranfer';
 
 
 use Switch;
@@ -271,7 +271,7 @@ sub validateIfEnvironmentIsInit{
 	}
 	$masters = $ENV{'DIRMAESTRO'};
 	$reports = $ENV{'DIRREPORTES'};
-	$tranfer = $ENV{'DIRPROCESADOS'};
+	$tranfer = "$ENV{'DIRREPORTES'}/transfer";
 	$balances = "balances";
 	$lists = "listados";
 }
