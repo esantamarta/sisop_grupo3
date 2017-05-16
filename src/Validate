@@ -350,7 +350,7 @@ function procesar_aceptados() {
 function crear_archivos_salida() {
 
 	mkdir -p "$REPORTES"/transfer
-	ARR_ACEPTADOS=("$ACEPTADOS"/*)
+	ARR_ACEPTADOS=("$VALIDADOS"/*)
 	for archivo in  "${ARR_ACEPTADOS[@]}"
 	do
 		test -f "$archivo" || continue
@@ -392,11 +392,12 @@ function crear_archivo_salida() {
 		ENTIDAD_DESTINO=$(grep "$COD_DESTINO" "$MAESTROS"/"bamae.txt" | cut -d';' -f1)
 
 		ARCHIVO_SALIDA="$REPORTES""/transfer/""$FECHA"".txt"
-
+		#echo "$ARCHIVO_SALIDA"
 		echo "$FUENTE"\;"$ENTIDAD_ORIGEN"\;"$COD_ORIGEN"\;"$ENTIDAD_DESTINO"\;"$COD_DESTINO"\;"$FECHA"\;"$IMPORTE"\;"$ESTADO"\;"$CBU_ORIGEN"\;"$CBU_DESTINO" >> "$ARCHIVO_SALIDA"
 		
 	done < "$ARCHIVO"
 
+	mkdir -p "$VALIDADOS""/proc"
 	mv "$ARCHIVO" "$VALIDADOS""/proc"
 	logInfo "El archivo fue movido a $VALIDADOS""/proc"
 }
