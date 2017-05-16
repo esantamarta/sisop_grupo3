@@ -279,7 +279,7 @@ function procesar_aceptados() {
 		i=$(basename "$FILE")
 		if es_archivo_repetido "$i" "$archivos_procesados";
 		then
-			mv"$ACEPTADOS/$i" "$RECHAZADOS"
+			mv "$ACEPTADOS/$i" "$RECHAZADOS"
 			archivos_procesados=$(echo "$archivos_procesados$i;")
 			continue
 		fi	
