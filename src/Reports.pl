@@ -265,13 +265,13 @@ sub showHelp{
 }
 
 sub validateIfEnvironmentIsInit{
-	if(!defined $ENV{'DIRMAESTRO'} || !defined $ENV{'DIRREPORTES' ||!defined $ENV{'DIRPROCESADOS'}}){
+	if(!defined $ENV{'MAESTROS'} || !defined $ENV{'REPORTES'}){
 		print "El ambiente no se encuentra inicializado. Por favor ejecute el comando Init\n";
 		exit;
 	}
-	$masters = $ENV{'DIRMAESTRO'};
-	$reports = $ENV{'DIRREPORTES'};
-	$tranfer = "$ENV{'DIRREPORTES'}/transfer";
+	$masters = $ENV{'MAESTROS'};
+	$reports = $ENV{'REPORTES'};
+	$tranfer = "$ENV{'REPORTES'}/transfer";
 	$balances = "balances";
 	$lists = "listados";
 }
